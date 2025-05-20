@@ -1,21 +1,28 @@
 import React from "react";
-import { Link } from 'react-router-dom'; 
 import { FaUser, FaSuitcase, FaCheckCircle } from "react-icons/fa";
 import "./CarCard.css";
 
-
+// Handles both static and backend car objects, with robust fallbacks
 const CarCard = ({ car, isSelected, onSelect, hideBookNowButton }) => {
+  // Normalize car data fields
+  const id = car._id || car.id;
+  const name = car.name || car.model || "Car";
+  const image = car.image || car.photo || "/assests/images/default-car.jpg";
+  const description = car.description || car.details || "";
+  const price = car.price || car.rent || 0;
+  const passengers = car.passengers || car.capacity || "-";
+  const luggage = car.luggage ?? "-";
+  // category is not shown in card, but you can add it if needed: car.category
+
   // Add image error handling
   const handleImageError = (e) => {
     e.target.src = "/assests/images/default-car.jpg"; // Fallback image
   };
 
   // Function to handle "Book Now" button click
-  const handleBookNowClick = () => {
-    // Save car data to localStorage
+  const handleBookNowClick = (e) => {
+    e.stopPropagation(); // Prevent card click/select if present
     localStorage.setItem("selectedCar", JSON.stringify(car));
-
-    // Redirect to BookNow page with "Details" tab active
     window.location.href = "/booknow?activeTab=details";
   };
 
@@ -23,31 +30,32 @@ const CarCard = ({ car, isSelected, onSelect, hideBookNowButton }) => {
     <div
       className={`car-card ${isSelected ? "selected" : ""}`}
       onClick={onSelect}
+      key={id}
     >
       {isSelected && (
         <div className="selected-tag">
           <FaCheckCircle className="check-icon" /> Selected
         </div>
       )}
-      <img 
-        src={car.image} 
-        alt={car.name} 
-        className="car-image" 
+      <img
+        src={image}
+        alt={name}
+        className="car-image"
         onError={handleImageError}
       />
       <div className="car-details">
-        <h3 className="car-name">{car.name}</h3>
-        <p className="car-description">{car.description}</p>
+        <h3 className="car-name">{name}</h3>
+        <p className="car-description">{description}</p>
         <div className="car-info">
           <span>
-            <FaUser className="icon" /> {car.passengers} Passengers
+            <FaUser className="icon" /> {passengers} Passengers
           </span>
           <span>
-            <FaSuitcase className="icon" /> {car.luggage} Luggage
+            <FaSuitcase className="icon" /> {luggage} Luggage
           </span>
         </div>
         <div className="car-footer">
-          <div className="car-price">${car.price}/hour</div>
+          <div className="car-price">₹{price}/hour</div>
           {/* Conditionally render the "Book Now" button */}
           {!hideBookNowButton && (
             <button onClick={handleBookNowClick} className="book-now-btn">

@@ -1,80 +1,110 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./Vehicles.css";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import CarCard from "../components/CarCard";
+import axios from "axios";
 
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+
+const staticVehicles = [
+  {
+    id: 1,
+    name: "Mercedes S-Class",
+    image: "/assests/images/mercedes-s-class.png",
+    description: "The pinnacle of luxury sedans, offering unmatched comfort for executive travel.",
+    price: 120,
+    passengers: 3,
+    luggage: 2,
+    category: "Luxury Sedans",
+  },
+  {
+    id: 2,
+    name: "BMW 7 Series",
+    image: "/assests/images/bmw-7-series.png",
+    description: "Blend of performance and luxury with spacious interior for business or leisure.",
+    price: 110,
+    passengers: 3,
+    luggage: 2,
+    category: "Luxury Sedans",
+  },
+  {
+    id: 3,
+    name: "Cadillac Escalade",
+    image: "/assests/images/cadillac-escalade.png",
+    description: "Spacious luxury SUV perfect for group travel with ample luggage space.",
+    price: 150,
+    passengers: 6,
+    luggage: 4,
+    category: "Premium SUVs",
+  },
+  {
+    id: 4,
+    name: "Range Rover",
+    image: "/assests/images/range-rover.png",
+    description: "The epitome of luxury SUVs, combining opulence with off-road capability.",
+    price: 140,
+    passengers: 4,
+    luggage: 3,
+    category: "Premium SUVs",
+  },
+  {
+    id: 5,
+    name: "Mercedes V-Class",
+    image: "/assests/images/mercedes-v-class.png",
+    description: "Spacious luxury van for group travel with exceptional comfort.",
+    price: 160,
+    passengers: 5,
+    luggage: 5,
+    category: "Luxury Vans",
+  },
+  {
+    id: 6,
+    name: "Rolls-Royce Phantom",
+    image: "/assests/images/rolls-royce.png",
+    description: "The ultimate symbol of prestige and luxury for special occasions.",
+    price: 300,
+    passengers: 3,
+    luggage: 2,
+    category: "Ultra Luxury",
+  },
+];
 
 const Vehicles = () => {
-  const allVehicles = [
-    {
-      id: 1,
-      name: "Mercedes S-Class",
-      image: "/assests/images/mercedes-s-class.png",
-      description: "The pinnacle of luxury sedans, offering unmatched comfort for executive travel.",
-      price: 120,
-      passengers: 3,
-      luggage: 2,
-      category: "Luxury Sedans",
-    },
-    {
-      id: 2,
-      name: "BMW 7 Series",
-      image: "/assests/images/bmw-7-series.png",
-      description: "Blend of performance and luxury with spacious interior for business or leisure.",
-      price: 110,
-      passengers: 3,
-      luggage: 2,
-      category: "Luxury Sedans",
-    },
-    {
-      id: 3,
-      name: "Cadillac Escalade",
-      image: "/assests/images/cadillac-escalade.png",
-      description: "Spacious luxury SUV perfect for group travel with ample luggage space.",
-      price: 150,
-      passengers: 6,
-      luggage: 4,
-      category: "Premium SUVs",
-    },
-    {
-      id: 4,
-      name: "Range Rover",
-      image: "/assests/images/range-rover.png",
-      description: "The epitome of luxury SUVs, combining opulence with off-road capability.",
-      price: 140,
-      passengers: 4,
-      luggage: 3,
-      category: "Premium SUVs",
-    },
-    {
-      id: 5,
-      name: "Mercedes V-Class",
-      image: "/assests/images/mercedes-v-class.png",
-      description: "Spacious luxury van for group travel with exceptional comfort.",
-      price: 160,
-      passengers: 5,
-      luggage: 5,
-      category: "Luxury Vans",
-    },
-    {
-      id: 6,
-      name: "Rolls-Royce Phantom",
-      image: "/assests/images/rolls-royce.png",
-      description: "The ultimate symbol of prestige and luxury for special occasions.",
-      price: 300,
-      passengers: 3,
-      luggage: 2,
-      category: "Ultra Luxury",
-    },
+  const [filteredCategory, setFilteredCategory] = useState("All Vehicles");
+  const [backendVehicles, setBackendVehicles] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch cars from backend on mount
+  useEffect(() => {
+    setLoading(true);
+    axios
+      .get(`${API_URL}/cars`)
+      .then((res) => {
+        setBackendVehicles(res.data || []);
+      })
+      .catch(() => {
+        setBackendVehicles([]); // fallback to static only
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  // Merge static and backend cars, avoid duplicates by name
+  const mergedVehicles = [
+    ...staticVehicles,
+    ...backendVehicles.filter(
+      (bcar) => !staticVehicles.some((scar) => scar.name === bcar.name)
+    ),
   ];
 
-  const [filteredCategory, setFilteredCategory] = useState("All Vehicles");
+  // Dynamically generate categories from all available vehicles
+  const categorySet = new Set(mergedVehicles.map(car => car.category));
+  const categoryList = ["All Vehicles", ...Array.from(categorySet)];
 
   const filteredVehicles =
     filteredCategory === "All Vehicles"
-      ? allVehicles
-      : allVehicles.filter((vehicle) => vehicle.category === filteredCategory);
+      ? mergedVehicles
+      : mergedVehicles.filter((vehicle) => vehicle.category === filteredCategory);
 
   return (
     <>
@@ -87,24 +117,28 @@ const Vehicles = () => {
           </p>
         </div>
         <div className="filter-bar">
-          {["All Vehicles", "Luxury Sedans", "Premium SUVs", "Luxury Vans", "Ultra Luxury"].map(
-            (category) => (
-              <button
-                key={category}
-                className={`filter-button ${
-                  filteredCategory === category ? "active" : ""
-                }`}
-                onClick={() => setFilteredCategory(category)}
-              >
-                {category}
-              </button>
-            )
-          )}
+          {categoryList.map((category) => (
+            <button
+              key={category}
+              className={`filter-button ${
+                filteredCategory === category ? "active" : ""
+              }`}
+              onClick={() => setFilteredCategory(category)}
+            >
+              {category}
+            </button>
+          ))}
         </div>
         <div className="vehicles-list">
-          {filteredVehicles.map((car) => (
-            <CarCard key={car.id} car={car} />
-          ))}
+          {loading ? (
+            <div style={{ padding: 24 }}>Loading cars...</div>
+          ) : filteredVehicles.length === 0 ? (
+            <div style={{ padding: 24 }}>No cars found.</div>
+          ) : (
+            filteredVehicles.map((car) => (
+              <CarCard key={car._id || car.id || car.name} car={car} />
+            ))
+          )}
         </div>
       </div>
       <Footer />

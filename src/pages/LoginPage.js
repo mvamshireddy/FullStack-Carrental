@@ -1,70 +1,62 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { GoogleLogin } from 'react-google-login';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import './LoginPage.css';
+import { loginUser } from "../services/auth";
+
+// inside your component
+
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Handle form submission for email/password login
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMsg('');
+    setSuccessMsg('');
+    setLoading(true);
+  
 
     try {
-      const response = await axios.post('http://localhost:5000/api/users/login', { email, password });
+      const response = await axios.post(`${API_URL}/users/login`, { email, password });
       const { token } = response.data;
-
-      // Save token to localStorage and navigate to dashboard or home
       localStorage.setItem('token', token);
-      alert('Login Successful');
-      navigate('/dashboard'); // Adjust route as needed
+      setSuccessMsg('Login successful! Redirecting...');
+      setTimeout(() => navigate('/profile'), 1000);
     } catch (error) {
-      console.error('Login Error:', error);
-      alert('Invalid credentials. Please try again.');
+      setErrorMsg(
+        error.response?.data?.message
+          ? error.response.data.message
+          : 'Invalid credentials. Please try again.'
+      );
+    } finally {
+      setLoading(false);
     }
-  };
-
-  // Handle Google login success
-  const handleGoogleSuccess = async (response) => {
-    try {
-      const { tokenId } = response;
-      const googleResponse = await axios.post('http://localhost:5000/api/auth/google/callback', { token: tokenId });
-      const { token } = googleResponse.data;
-
-      // Save token to localStorage and navigate to dashboard or home
-      localStorage.setItem('token', token);
-      alert('Google Login Successful');
-      navigate('/dashboard'); // Adjust route as needed
-    } catch (error) {
-      console.error('Google Login Error:', error);
-      alert('Google login failed. Please try again.');
-    }
-  };
-
-  // Handle Google login failure
-  const handleGoogleFailure = (error) => {
-    console.error('Google Login Failed:', error);
-    alert('Google login failed. Please try again.');
   };
 
   return (
     <div className="login-page">
       <div className="login-container">
         <h1>Login</h1>
-        {/* Email/Password Login Form */}
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="email">Email</label>
             <input
               type="email"
               id="email"
+              autoComplete="username"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
               required
+              disabled={loading}
             />
           </div>
           <div className="form-group">
@@ -72,26 +64,24 @@ const LoginPage = () => {
             <input
               type="password"
               id="password"
+              autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
               required
+              disabled={loading}
             />
           </div>
-          <button type="submit" className="login-button">Login</button>
+          <button type="submit" className="login-button" disabled={loading}>
+            {loading ? 'Logging in...' : 'Login'}
+          </button>
         </form>
-
+        {errorMsg && <div style={{ color: 'red', marginTop: 8 }}>{errorMsg}</div>}
+        {successMsg && <div style={{ color: 'green', marginTop: 8 }}>{successMsg}</div>}
         <div className="divider">OR</div>
-
-        {/* Google Login Button */}
-        <GoogleLogin
-          clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}
-          buttonText="Login with Google"
-          onSuccess={handleGoogleSuccess}
-          onFailure={handleGoogleFailure}
-          cookiePolicy={'single_host_origin'}
-          className="google-login-button"
-        />
+        <Link to="/register">Don&apos;t have an account? Register</Link>
+        <br />
+        <Link to="/forgot-password">Forgot password?</Link>
       </div>
     </div>
   );

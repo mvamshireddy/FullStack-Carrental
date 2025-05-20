@@ -6,10 +6,12 @@ import About from './pages/About';
 import Services from './pages/Services';
 import Vehicles from './pages/Vehicles';
 import Contact from './pages/Contact';
-import BookNow from './pages/BookNow'; 
+import BookNow from './pages/BookNow';
 import BookingConfirmation from './pages/BookingConfirmation';
 import LoginPage from './pages/LoginPage';
-
+import RegisterPage from './pages/RegisterPage';
+import ProfilePage from './pages/ProfilePage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
 
 function App() {
   return (
@@ -21,9 +23,12 @@ function App() {
         <Route path="/services" element={<Services />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
-        <Route path="/booknow" element={<BookNow />} /> {/* BookNow route */}
-        <Route path="/confirmation/:bookingRef" element={<BookingConfirmation />} /> {/* Booking confirmation route */}
-        <Route path="/login" element={<LoginPage />} /> {/* Login route */}
+        <Route path="/booknow" element={<BookNow />} />
+        <Route path="/confirmation/:bookingRef" element={<BookingConfirmation />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       </Routes>
     </Router>
   );

@@ -1,166 +1,74 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; // Import useNavigate for redirection
+import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import CarCard from "../components/CarCard";
 import "./BookNow.css";
-import { allCars } from '../data/cars';
+import { allCars } from "../data/cars";
+import { createBooking } from "../services/booking"; // <-- API service for backend integration
+
 const SERVICE_FEE = 25; // Fixed service fee
 
 const BookNow = () => {
-  const navigate = useNavigate(); // Initialize useNavigate hook
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("vehicle");
-  const [selectedCar, setSelectedCar] = useState(null); // Track selected car
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("creditCard"); // Default to Credit Card
-  const [cardNumber, setCardNumber] = useState(""); // Track card number input
-  const [isBookingConfirmed, setIsBookingConfirmed] = useState(false); // Track if booking is confirmed
-  const [bookingRef, setBookingRef] = useState(""); // Store booking reference number
-  const [isSubmitting, setIsSubmitting] = useState(false); // Track form submission state
+  const [selectedCar, setSelectedCar] = useState(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("creditCard");
+  const [cardNumber, setCardNumber] = useState("");
+  const [isBookingConfirmed, setIsBookingConfirmed] = useState(false);
+  const [bookingRef, setBookingRef] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [bookingError, setBookingError] = useState(""); // <-- Error message for booking API
 
   // Pre-fill selectedCar from localStorage on load
   useEffect(() => {
     const storedCar = localStorage.getItem("selectedCar");
     if (storedCar) {
       setSelectedCar(JSON.parse(storedCar));
-      setActiveTab("details"); // Redirect to "Details" tab if car is pre-selected
-      localStorage.removeItem("selectedCar"); // Clear after use
+      setActiveTab("details");
+      localStorage.removeItem("selectedCar");
     }
   }, []);
-  
-  // Function to handle card number validation and formatting
+
+  // Card/UPI/Bank field handlers (validation/formatting)
   const handleCardNumberChange = (e) => {
-    let value = e.target.value.replace(/\D/g, ""); // Remove non-digit characters
-    if (value.length > 16) value = value.slice(0, 16); // Limit to 16 digits
-    const formattedValue = value.replace(/(\d{4})(?=\d)/g, "$1 "); // Add space every 4 digits
+    let value = e.target.value.replace(/\D/g, "");
+    if (value.length > 16) value = value.slice(0, 16);
+    const formattedValue = value.replace(/(\d{4})(?=\d)/g, "$1 ");
     setCardNumber(formattedValue);
   };
-
-  // Function to handle Expiry Date input validation and formatting
   const handleExpiryDateChange = (e) => {
-    let value = e.target.value.replace(/\D/g, ""); // Remove non-digit characters
-    if (value.length > 4) value = value.slice(0, 4); // Limit to 4 digits
-
-    // Add "/" after the first two digits
-    if (value.length > 2) {
-      value = value.slice(0, 2) + "/" + value.slice(2);
-    }
-
-    e.target.value = value; // Update the input field value
+    let value = e.target.value.replace(/\D/g, "");
+    if (value.length > 4) value = value.slice(0, 4);
+    if (value.length > 2) value = value.slice(0, 2) + "/" + value.slice(2);
+    e.target.value = value;
   };
-
-  // Function to handle CVV input validation
   const handleCVVChange = (e) => {
-    let value = e.target.value.replace(/\D/g, ""); // Remove non-digit characters
-    if (value.length > 3) value = value.slice(0, 3); // Limit to 3 digits
-
-    e.target.value = value; // Update the input field value
+    let value = e.target.value.replace(/\D/g, "");
+    if (value.length > 3) value = value.slice(0, 3);
+    e.target.value = value;
   };
 
-  // Function to generate random booking reference
+  // Generate booking reference
   const generateBookingRef = () => {
-    // Create a more sophisticated reference including timestamp
     const timestamp = new Date().toISOString().replace(/[-:.TZ]/g, '').substring(0, 8);
-    const random = Math.floor(100000 + Math.random() * 900000); // Random 6-digit
+    const random = Math.floor(100000 + Math.random() * 900000);
     return `REF-${timestamp}-${random}`;
   };
 
-  // Function to format date for display
+  // Date formatting helpers
   const formatDate = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   };
-
-  // Function to get current date for booking confirmation
   const getCurrentDate = () => {
     const now = new Date();
-    return now.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
+    return now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   };
+  const handlePrint = () => window.print();
 
-  // Function to handle printing
-  const handlePrint = () => {
-    window.print();
-  };
-
-  // Function to handle booking confirmation
-  const handleConfirmBooking = async () => {
-    // Prevent multiple form submissions
-    if (isSubmitting) return;
-    setIsSubmitting(true);
-
-    try {
-      // Payment method validation
-      if (selectedPaymentMethod === "creditCard" && !cardNumber) {
-        alert("Please complete the credit card details before confirming the booking.");
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (selectedPaymentMethod === "upi" && !document.querySelector('input[placeholder="example@upi"]').value) {
-        alert("Please enter your UPI ID before confirming the booking.");
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (selectedPaymentMethod === "bankTransfer" && 
-          (!document.querySelector('input[placeholder="Enter your bank account number"]').value || 
-          !document.querySelector('input[placeholder="Enter IFSC code"]').value)) {
-        alert("Please complete the bank transfer details before confirming the booking.");
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Generate booking reference
-      const ref = generateBookingRef();
-      setBookingRef(ref);
-
-      // Create booking data object
-      const bookingData = {
-        bookingRef: ref,
-        car: selectedCar,
-        bookingDetails: bookingDetails,
-        contactDetails: contactDetails,
-        paymentMethod: selectedPaymentMethod,
-        totalCost: calculateTotalCost(),
-        serviceFee: SERVICE_FEE,
-        bookingDate: getCurrentDate(),
-        timestamp: new Date().toISOString() // Add exact timestamp for sorting/filtering
-      };
-
-      // If backend API is ready, you would send data to the backend here
-      // For now, save to localStorage
-      localStorage.setItem("confirmedBooking", JSON.stringify(bookingData));
-
-      // Mark booking as confirmed (for current page state)
-      setIsBookingConfirmed(true);
-      
-      // Option 1: Show confirmation tab in current page
-      //setActiveTab("confirmed");
-      
-      // Option 2: Navigate to dedicated confirmation page after a short delay
-      // This delay allows the user to see the "processing" state
-      setTimeout(() => {
-        navigate(`/confirmation/${ref}`);
-      }, 1500);
-
-      // In a real implementation, you would also handle error cases
-      // and provide appropriate feedback to the user
-    } catch (error) {
-      console.error("Error processing booking:", error);
-      alert("There was an error processing your booking. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
+  // Booking details and contact
   const [bookingDetails, setBookingDetails] = useState({
     pickupStartDate: "",
     pickupStartTime: "",
@@ -169,98 +77,127 @@ const BookNow = () => {
     pickupLocation: "",
     dropoffLocation: "",
   });
-
   const [contactDetails, setContactDetails] = useState({
     fullName: "",
     email: "",
     phoneNumber: "",
     specialRequests: "",
   });
-
   const [errors, setErrors] = useState({
     email: "",
     phoneNumber: "",
   });
 
-  const allVehicles = allCars; // Assuming allCars is an array of car objects
-
-  const handleTabClick = (tab) => {
-    setActiveTab(tab);
-  };
-
-  const handleCarSelection = (car) => {
-    setSelectedCar(car); // Update selected car
-  };
-
+  // Tabs, Car, and Form handlers
+  const handleTabClick = (tab) => setActiveTab(tab);
+  const handleCarSelection = (car) => setSelectedCar(car);
   const handleBookingDetailsChange = (field, value) => {
-    setBookingDetails((prevDetails) => ({
-      ...prevDetails,
-      [field]: value,
-    }));
+    setBookingDetails((prev) => ({ ...prev, [field]: value }));
   };
-
   const handleContactDetailsChange = (field, value) => {
-    setContactDetails((prevDetails) => ({
-      ...prevDetails,
-      [field]: value,
-    }));
-
+    setContactDetails((prev) => ({ ...prev, [field]: value }));
     if (field === "email") {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      setErrors((prevErrors) => ({
-        ...prevErrors,
-        email: emailRegex.test(value) ? "" : "Invalid email format.",
-      }));
+      setErrors((prev) => ({ ...prev, email: emailRegex.test(value) ? "" : "Invalid email format." }));
     }
-
     if (field === "phoneNumber") {
       const phoneRegex = /^\d{10}$/;
-      setErrors((prevErrors) => ({
-        ...prevErrors,
-        phoneNumber: phoneRegex.test(value) ? "" : "Phone number must be 10 digits.",
-      }));
+      setErrors((prev) => ({ ...prev, phoneNumber: phoneRegex.test(value) ? "" : "Phone number must be 10 digits." }));
     }
   };
 
+  // Pricing helpers
   const calculateDurationInHours = () => {
     if (!bookingDetails.pickupStartDate || !bookingDetails.dropoffEndDate) return 0;
-
     const start = new Date(`${bookingDetails.pickupStartDate}T${bookingDetails.pickupStartTime}`);
     const end = new Date(`${bookingDetails.dropoffEndDate}T${bookingDetails.dropoffEndTime}`);
-
     const diffInMs = end - start;
-    return Math.max(1, Math.ceil(diffInMs / (1000 * 60 * 60))); // Minimum 1 hour
+    return Math.max(1, Math.ceil(diffInMs / (1000 * 60 * 60)));
   };
-
   const calculateRentalCost = () => {
     const duration = calculateDurationInHours();
     return selectedCar ? selectedCar.price * duration : 0;
   };
+  const calculateTotalCost = () => calculateRentalCost() + SERVICE_FEE;
 
-  const calculateTotalCost = () => {
-    return calculateRentalCost() + SERVICE_FEE;
+  // Form completeness checks
+  const isDetailsPageComplete = () => (
+    bookingDetails.pickupStartDate &&
+    bookingDetails.pickupStartTime &&
+    bookingDetails.dropoffEndDate &&
+    bookingDetails.dropoffEndTime &&
+    bookingDetails.pickupLocation &&
+    bookingDetails.dropoffLocation
+  );
+  const isContactPageComplete = () => (
+    contactDetails.fullName &&
+    contactDetails.email &&
+    contactDetails.phoneNumber &&
+    !errors.email &&
+    !errors.phoneNumber
+  );
+
+  // SUBMIT: Confirm booking and send to backend
+  const handleConfirmBooking = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    setBookingError("");
+
+    try {
+      // Payment method validation
+      if (selectedPaymentMethod === "creditCard" && !cardNumber) {
+        setBookingError("Please complete the credit card details before confirming the booking.");
+        setIsSubmitting(false);
+        return;
+      }
+      if (selectedPaymentMethod === "upi" && !document.querySelector('input[placeholder="example@upi"]').value) {
+        setBookingError("Please enter your UPI ID before confirming the booking.");
+        setIsSubmitting(false);
+        return;
+      }
+      if (selectedPaymentMethod === "bankTransfer" &&
+        (!document.querySelector('input[placeholder="Enter your bank account number"]').value ||
+          !document.querySelector('input[placeholder="Enter IFSC code"]').value)) {
+        setBookingError("Please complete the bank transfer details before confirming the booking.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Generate booking reference
+      const ref = generateBookingRef();
+      setBookingRef(ref);
+
+      // Prepare booking data for backend
+      const bookingData = {
+        bookingRef: ref,
+        car: selectedCar,
+        bookingDetails,
+        contactDetails,
+        paymentMethod: selectedPaymentMethod,
+        totalCost: calculateTotalCost(),
+        serviceFee: SERVICE_FEE,
+        bookingDate: getCurrentDate(),
+        timestamp: new Date().toISOString()
+      };
+
+      // Send booking to backend
+      await createBooking(bookingData);
+
+      setIsBookingConfirmed(true);
+      setTimeout(() => {
+        navigate(`/confirmation/${ref}`);
+      }, 1500);
+    } catch (error) {
+      setBookingError(
+        error?.response?.data?.message ||
+        "There was an error processing your booking. Please try again."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const isDetailsPageComplete = () => {
-    return (
-      bookingDetails.pickupStartDate &&
-      bookingDetails.pickupStartTime &&
-      bookingDetails.dropoffEndDate &&
-      bookingDetails.dropoffEndTime &&
-      bookingDetails.pickupLocation &&
-      bookingDetails.dropoffLocation
-    );
-  };
-
-  const isContactPageComplete = () => {
-    return (
-      contactDetails.fullName &&
-      contactDetails.email &&
-      contactDetails.phoneNumber &&
-      !errors.email &&
-      !errors.phoneNumber
-    );
-  };
+  const allVehicles = allCars;
 
   return (
     <>
@@ -313,6 +250,12 @@ const BookNow = () => {
         )}
 
         <div className="book-now-content">
+          {bookingError && (
+            <div style={{ color: "red", textAlign: "center", margin: "12px 0" }}>
+              {bookingError}
+            </div>
+          )}
+
           {/* Vehicle Selection Page */}
           {activeTab === "vehicle" && (
             <div className="vehicle-selection">
@@ -326,7 +269,7 @@ const BookNow = () => {
                       car={car}
                       isSelected={selectedCar?.id === car.id}
                       onSelect={() => handleCarSelection(car)}
-                      hideBookNowButton={true} // Hide the button on the Vehicle Page
+                      hideBookNowButton={true}
                     />
                   ))}
                 </div>
@@ -354,7 +297,7 @@ const BookNow = () => {
                   <input
                     type="date"
                     value={bookingDetails.pickupStartDate}
-                    onClick={(e) => e.target.showPicker()} // Trigger picker on click
+                    onClick={(e) => e.target.showPicker()}
                     onChange={(e) => handleBookingDetailsChange("pickupStartDate", e.target.value)}
                   />
                 </label>
@@ -363,7 +306,7 @@ const BookNow = () => {
                   <input
                     type="time"
                     value={bookingDetails.pickupStartTime}
-                    onClick={(e) => e.target.showPicker()} // Trigger picker on click
+                    onClick={(e) => e.target.showPicker()}
                     onChange={(e) => handleBookingDetailsChange("pickupStartTime", e.target.value)}
                   />
                 </label>
@@ -372,7 +315,7 @@ const BookNow = () => {
                   <input
                     type="date"
                     value={bookingDetails.dropoffEndDate}
-                    onClick={(e) => e.target.showPicker()} // Trigger picker on click
+                    onClick={(e) => e.target.showPicker()}
                     onChange={(e) => handleBookingDetailsChange("dropoffEndDate", e.target.value)}
                   />
                 </label>
@@ -381,7 +324,7 @@ const BookNow = () => {
                   <input
                     type="time"
                     value={bookingDetails.dropoffEndTime}
-                    onClick={(e) => e.target.showPicker()} // Trigger picker on clickss
+                    onClick={(e) => e.target.showPicker()}
                     onChange={(e) => handleBookingDetailsChange("dropoffEndTime", e.target.value)}
                   />
                 </label>
@@ -476,12 +419,10 @@ const BookNow = () => {
           {activeTab === "payment" && selectedCar && (
             <div className="payment-details">
               <h2>Payment & Confirmation</h2>
-
-              {/* Booking Summary Section */}
               <div className="booking-summary">
                 <h3>Booking Summary</h3>
                 <div className="summary-car">
-                  <img src={selectedCar.image} alt={selectedCar.name} className="summary-car-img"  onError={(e) => e.target.src = "/assets/images/default-car.jpg"} />
+                  <img src={selectedCar.image} alt={selectedCar.name} className="summary-car-img" onError={(e) => e.target.src = "/assets/images/default-car.jpg"} />
                   <h4 className="summary-car-name">{selectedCar.name}</h4>
                 </div>
                 <div className="summary-details">
@@ -509,8 +450,6 @@ const BookNow = () => {
                   </div>
                 </div>
               </div>
-
-              {/* Price Summary */}
               <div className="price-summary">
                 <div>
                   <span>Vehicle Rental ({calculateDurationInHours()} hours):</span>
@@ -526,8 +465,6 @@ const BookNow = () => {
                   <strong>${calculateTotalCost()}</strong>
                 </div>
               </div>
-
-              {/* Payment Method Selection */}
               <label className="payment-method-label" htmlFor="paymentMethod">
                 Please select a payment method:
               </label>
@@ -541,8 +478,6 @@ const BookNow = () => {
                 <option value="upi">UPI</option>
                 <option value="bankTransfer">Bank Transfer</option>
               </select>
-
-              {/* Render Credit Card Payment Form */}
               {selectedPaymentMethod === "creditCard" && (
                 <form className="payment-form">
                   <h3>Credit Card Payment</h3>
@@ -562,8 +497,8 @@ const BookNow = () => {
                       <input
                         type="text"
                         placeholder="MM/YY"
-                        onChange={handleExpiryDateChange} // Attach the Expiry Date handler
-                        maxLength="5" // Limit input to 5 characters including "/"
+                        onChange={handleExpiryDateChange}
+                        maxLength="5"
                       />
                     </label>
                     <label>
@@ -571,15 +506,13 @@ const BookNow = () => {
                       <input
                         type="text"
                         placeholder="123"
-                        onChange={handleCVVChange} // Attach the CVV handler
-                        maxLength="3" // Limit input to 3 characters
+                        onChange={handleCVVChange}
+                        maxLength="3"
                       />
                     </label>
                   </div>
                 </form>
               )}
-
-              {/* Render UPI Payment Form */}
               {selectedPaymentMethod === "upi" && (
                 <form className="payment-form">
                   <h3>UPI Payment</h3>
@@ -587,8 +520,6 @@ const BookNow = () => {
                   <input type="text" placeholder="example@upi" />
                 </form>
               )}
-
-              {/* Render Bank Transfer Form */}
               {selectedPaymentMethod === "bankTransfer" && (
                 <form className="payment-form">
                   <h3>Bank Transfer</h3>
@@ -598,14 +529,12 @@ const BookNow = () => {
                   <input type="text" placeholder="Enter IFSC code" />
                 </form>
               )}
-
-              {/* Action Buttons */}
               <div className="action-buttons">
                 <button className="cancel-button" onClick={() => handleTabClick("contact")}>
                   Back
                 </button>
-                <button 
-                  className={`confirm-button ${isSubmitting ? "submitting" : ""}`} 
+                <button
+                  className={`confirm-button ${isSubmitting ? "submitting" : ""}`}
                   onClick={handleConfirmBooking}
                   disabled={isSubmitting}
                 >
@@ -630,19 +559,16 @@ const BookNow = () => {
                   <h3>Booking Reference</h3>
                   <p className="ref-number">{bookingRef}</p>
                 </div>
-                
                 <div className="confirmation-summary">
                   <h3>Booking Summary</h3>
-                  
                   <div className="summary-car">
-                    <img src={selectedCar.image} alt={selectedCar.name} className="summary-car-img" 
-                     onError={(e) => e.target.src = "/assets/default-car.jpg"} />
+                    <img src={selectedCar.image} alt={selectedCar.name} className="summary-car-img"
+                      onError={(e) => e.target.src = "/assets/default-car.jpg"} />
                     <div className="summary-car-info">
                       <h4 className="summary-car-name">{selectedCar.name}</h4>
                       <p className="summary-car-category">{selectedCar.category}</p>
                     </div>
                   </div>
-                  
                   <div className="summary-grid">
                     <div className="summary-item">
                       <span className="summary-label">Booking Date</span>
@@ -683,12 +609,11 @@ const BookNow = () => {
                     <div className="summary-item">
                       <span className="summary-label">Payment Method</span>
                       <span className="summary-value">
-                        {selectedPaymentMethod === "creditCard" ? "Credit Card" : 
-                         selectedPaymentMethod === "upi" ? "UPI" : "Bank Transfer"}
+                        {selectedPaymentMethod === "creditCard" ? "Credit Card" :
+                          selectedPaymentMethod === "upi" ? "UPI" : "Bank Transfer"}
                       </span>
                     </div>
                   </div>
-                  
                   <div className="confirmation-price">
                     <div className="price-row">
                       <span>Rental Cost</span>
@@ -705,13 +630,12 @@ const BookNow = () => {
                   </div>
                 </div>
               </div>
-              
               <div className="confirmation-actions">
                 <button className="print-button" onClick={handlePrint}>
                   <i className="fas fa-print"></i> Print Receipt
                 </button>
-                <button 
-                  className="view-booking-button" 
+                <button
+                  className="view-booking-button"
                   onClick={() => navigate(`/confirmation/${bookingRef}`)}
                 >
                   View Booking Details
@@ -720,7 +644,6 @@ const BookNow = () => {
                   Return to Home
                 </button>
               </div>
-              
               <div className="confirmation-footer">
                 <p>A confirmation email has been sent to {contactDetails.email}</p>
                 <p>For any queries, please contact our support team.</p>
