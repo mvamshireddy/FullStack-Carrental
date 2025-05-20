@@ -1,12 +1,11 @@
 const request = require('supertest');
 const mongoose = require('mongoose');
-const app = require('../server');
+const app = require('../server'); // Update this path if your entrypoint has a different name
 const User = require('../models/User');
 
 beforeAll(async () => {
-  // Only connect if not connected
   if (mongoose.connection.readyState === 0) {
-    await mongoose.connect('mongodb://localhost:27017/car_rental_test', {
+    await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/car_rental_test', {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
