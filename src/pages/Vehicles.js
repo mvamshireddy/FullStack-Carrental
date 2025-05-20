@@ -3,9 +3,7 @@ import "./Vehicles.css";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import CarCard from "../components/CarCard";
-import { getCars } from '../services/api';
-// Then in your code:
-const cars = await getCars();
+
 
 const Vehicles = () => {
   const allVehicles = [

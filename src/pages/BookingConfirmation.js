@@ -4,9 +4,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import "./BookingConfirmation.css";
 import axios from 'axios';
-import { getCars } from '../services/api';
-// Then in your code:
-const cars = await getCars();
+
 
 const BookingConfirmation = () => {
   const { bookingRef } = useParams(); // Get booking reference from URL
