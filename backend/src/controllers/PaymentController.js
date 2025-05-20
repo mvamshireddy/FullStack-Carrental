@@ -1,5 +1,6 @@
 const Payment = require('../models/Payment');
 const Booking = require('../models/Booking');
+const Car = require('../models/Car');
 
 // Process payment
 exports.processPayment = async (req, res) => {
