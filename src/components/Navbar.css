@@ -1,0 +1,192 @@
+/* Navbar General Styling */
+.navbar {
+  background-color: rgba(15, 23, 42, 0.8); /* Dark navy with 80% opacity */
+  padding: 3px 15px; /* Reduced padding for smaller height */
+  color: white; /* White text */
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 1000;
+  backdrop-filter: blur(10px); /* Adds a blur effect */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-container {
+  display: flex;
+  justify-content: space-between; /* Logo to the left, links & actions to the right */
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Logo */
+.navbar-logo {
+  font-size: 1.1rem; /* Reduced font size for responsive adjustments */
+  font-weight: bold;
+  color: #facc15; /* Yellow for logo */
+  margin-right: 10px; /* Add spacing between logo and links */
+  flex-shrink: 1; /* Allow the logo to shrink responsively */
+  white-space: nowrap; /* Prevent text wrapping */
+}
+
+.navbar-logo .highlight {
+  color: white;
+}
+
+/* Desktop Navigation Links */
+.navbar-links.desktop-links {
+  list-style: none;
+  display: flex; /* Ensure links are displayed in a row */
+  flex-direction: row; /* Horizontal alignment */
+  gap: 15px; /* Reduced spacing between links */
+  margin: 0;
+  padding: 0;
+  flex-grow: 1; /* Allow links to take up available space */
+  justify-content: center; /* Center links between logo and actions */
+}
+
+/* Links Styles */
+.navbar-links .nav-link {
+  color: white;
+  text-decoration: none;
+  font-size: 0.9rem; /* Reduced link font size */
+  transition: color 0.3s ease;
+}
+
+.navbar-links .nav-link:hover {
+  color: #facc15; /* Yellow on hover */
+}
+
+/* Desktop Actions (Book Now & User Icon) */
+.navbar-actions.desktop-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Reduced spacing between actions */
+  flex-shrink: 0; /* Prevent actions from shrinking */
+}
+
+/* Book Now Button */
+.btn-book-now {
+  background-color: #facc15; /* Yellow background */
+  color: #0f172a; /* Dark navy text */
+  border: none;
+  padding: 6px 12px; /* Reduced button size */
+  font-size: 0.8rem; /* Reduced button font size */
+  font-weight: bold;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.btn-book-now:hover {
+  background-color: #eab308; /* Darker yellow */
+}
+
+/* User Icon */
+.user-icon {
+  font-size: 1rem; /* Reduced icon size */
+  color: white;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.user-icon:hover {
+  color: #facc15; /* Yellow on hover */
+}
+
+/* Mobile Menu Icon */
+.mobile-menu-icon {
+  display: none; /* Hidden by default */
+  font-size: 1.3rem; /* Slightly reduced icon size */
+  cursor: pointer;
+  color: white;
+  z-index: 1500; /* Ensure it stays on top when menu is open */
+}
+
+/* Mobile Navigation Overlay */
+.navbar-overlay {
+  display: none; /* Hidden by default */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background-color: rgba(15, 23, 42, 0.9); /* Dark background */
+  color: white;
+  z-index: 1400; /* Below the hamburger icon but above other content */
+  flex-direction: column;
+  justify-content: center; /* Center contents vertically */
+  align-items: center; /* Center contents horizontally */
+  gap: 20px;
+  opacity: 0; /* Invisible by default */
+  transition: opacity 0.3s ease;
+}
+
+.navbar-overlay.open {
+  display: flex; /* Show when open */
+  opacity: 1; /* Fully visible */
+}
+
+/* Mobile Links (Inside Overlay) */
+.navbar-links {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 15px; /* Reduced spacing between links */
+  margin: 0;
+  padding: 0;
+}
+
+.navbar-links .nav-link {
+  color: white;
+  text-decoration: none;
+  font-size: 1rem; /* Slightly reduced font size for mobile */
+  transition: color 0.3s ease;
+}
+
+.navbar-links .nav-link:hover {
+  color: #facc15; /* Yellow on hover */
+}
+
+/* Sign In / Register Link */
+.navbar-signin {
+  margin-top: 10px; /* Slightly reduced spacing below the button */
+}
+
+.navbar-signin a {
+  color: white;
+  text-decoration: none;
+  font-size: 0.8rem; /* Reduced font size */
+  transition: color 0.3s ease;
+}
+
+.navbar-signin a:hover {
+  color: #facc15; /* Yellow on hover */
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  /* Mobile Menu Icon Visibility */
+  .mobile-menu-icon {
+    display: block; /* Display hamburger menu icon */
+  }
+
+  /* Hide Desktop Links */
+  .navbar-links.desktop-links {
+    display: none; /* Hide desktop links for mobile */
+  }
+
+  /* Hide Desktop Actions */
+  .navbar-actions.desktop-actions {
+    display: none;
+  }
+
+  /* Mobile Logo and Button Alignment */
+  .navbar-container {
+    justify-content: space-between; /* Ensure logo and menu icon are aligned */
+  }
+
+  .navbar-logo {
+    margin-right: 10px; /* Reduce gap between logo and menu icon */
+  }
+}

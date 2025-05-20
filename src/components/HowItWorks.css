@@ -1,0 +1,75 @@
+.how-it-works {
+  background-color: #f9fafb; /* Light background */
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.how-it-works .container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.how-it-works h2 {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #1f2937; /* Dark gray for heading */
+  margin-bottom: 20px;
+}
+
+.how-it-works .subtitle {
+  font-size: 1.2rem;
+  color: #6b7280; /* Gray for subtitle */
+  margin-bottom: 40px;
+}
+
+.how-it-works .steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* Four items in a single row */
+  gap: 40px; /* Space between items */
+  align-items: center;
+}
+
+.how-it-works .step {
+  text-align: center;
+}
+
+.how-it-works .icon {
+  background-color: #1e293b; /* Dark navy for icons */
+  color: white; /* White icon color */
+  font-size: 2.5rem;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+
+.how-it-works .step h3 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #1f2937; /* Dark gray for step title */
+  margin-bottom: 10px;
+}
+
+.how-it-works .step p {
+  font-size: 1rem;
+  color: #6b7280; /* Gray for step description */
+  line-height: 1.5;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .how-it-works .steps {
+    grid-template-columns: repeat(2, 1fr); /* Two items per row for medium screens */
+    gap: 30px; /* Adjust gap for medium screens */
+  }
+}
+
+@media (max-width: 768px) {
+  .how-it-works .steps {
+    grid-template-columns: 1fr; /* One item per row for small screens */
+    gap: 20px; /* Adjust gap for small screens */
+  }
+}

@@ -1,0 +1,33 @@
+/* Ensure HTML and Body occupy full height */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%; /* Occupy full viewport height */
+  background-color: #f8f9fa; /* Match overall page background */
+}
+
+/* Universal Box Sizing */
+* {
+  box-sizing: border-box; /* Consistent sizing across elements */
+}
+
+/* Apply Flexbox to the Body */
+body {
+  display: flex;
+  flex-direction: column; /* Stack header, content, and footer */
+  min-height: 100vh; /* Ensure body stretches to full viewport height */
+}
+
+/* Ensure the root container is flexible */
+#root {
+  display: flex;
+  flex-direction: column;
+  flex: 1; /* Allow content to stretch and push footer down */
+  width: 100%; /* Full width for the root container */
+
+}
+
+/* Footer stays at the bottom */
+footer {
+  flex-shrink: 0; /* Prevent footer from collapsing */
+}

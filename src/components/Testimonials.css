@@ -1,0 +1,97 @@
+.testimonials {
+  background-color: #0f172a; /* Dark navy background */
+  color: white; /* White text */
+  padding: 60px 20px;
+  text-align: center; /* Center-align all text inside */
+  display: flex; /* Use flexbox for centering */
+  flex-direction: column; /* Stack items vertically */
+  align-items: center; /* Horizontally center items */
+  justify-content: center; /* Vertically center items */
+}
+
+.testimonials .container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.testimonials h2 {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.testimonials .subtitle {
+  font-size: 1.2rem;
+  color: #cbd5e1; /* Light gray for subtitle */
+  margin-bottom: 40px;
+}
+
+.testimonial-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* Three items in one row */
+  gap: 30px; /* Space between items */
+  justify-content: center; /* Center-align the whole grid */
+  align-items: center; /* Vertically center-align cards */
+}
+
+.testimonial-card {
+  background-color: #1e293b; /* Lighter navy for cards */
+  border-radius: 10px;
+  padding: 20px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for cards */
+}
+
+.testimonial-header .stars {
+  color: #facc15; /* Yellow for stars */
+  font-size: 1.2rem;
+}
+
+.feedback {
+  font-size: 1rem;
+  margin: 15px 0;
+  color: #e2e8f0; /* Light gray text */
+}
+
+.testimonial-footer {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.client-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #facc15; /* Yellow border */
+}
+
+.client-name {
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.client-role {
+  font-size: 0.9rem;
+  color: #cbd5e1; /* Light gray for role */
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .testimonial-cards {
+    grid-template-columns: repeat(2, 1fr); /* Two items per row for medium screens */
+    gap: 30px;
+  }
+}
+
+@media (max-width: 768px) {
+  .testimonial-cards {
+    grid-template-columns: 1fr; /* One item per row for smaller screens */
+    gap: 20px;
+  }
+}

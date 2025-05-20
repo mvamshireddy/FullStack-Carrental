@@ -1,0 +1,76 @@
+/* Service Card Styling */
+.service-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  max-width: 900px;
+  margin: auto;
+}
+
+/* Image Placeholder */
+.service-image {
+  width: 40%;
+  height: 200px;
+  background-color: #e0e0e0; /* Light gray placeholder */
+  border-radius: 5px;
+}
+
+/* Service Details */
+.service-details {
+  flex: 1; /* Take up remaining space */
+}
+
+.service-details h2 {
+  font-size: 1.8rem;
+  color: #0f172a; /* Dark navy text */
+  margin-bottom: 10px;
+}
+
+.service-details p {
+  font-size: 1rem;
+  color: #555;
+  margin-bottom: 15px;
+}
+
+.service-details ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0 0 20px;
+}
+
+.service-details ul li {
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+.service-details ul li::before {
+  content: '✔';
+  color: #f59e0b; /* Golden color */
+  margin-right: 8px;
+  font-weight: bold;
+}
+
+/* Button Styling */
+.service-button {
+  background-color: #0f172a; /* Dark navy */
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.service-button:hover {
+  background-color: #1e293b; /* Slightly lighter navy */
+}

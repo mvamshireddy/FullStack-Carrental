@@ -1,0 +1,95 @@
+.premium-travel-container {
+  background-color: #1e293b; /* Dark navy background */
+  color: white;
+  padding: 40px 20px;
+  border-radius: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  margin: 40px auto;
+  max-width: 1200px;
+}
+
+.premium-travel-content {
+  flex: 1;
+  margin-right: 20px;
+}
+
+.premium-travel-heading {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.premium-travel-description {
+  font-size: 1rem;
+  color: #cbd5e1; /* Light gray text */
+}
+
+.premium-travel-actions {
+  display: flex;
+  gap: 15px; /* Space between buttons */
+}
+
+.book-now-btn {
+  background-color: #facc15; /* Yellow background */
+  color: #0f172a; /* Dark text */
+  border: none;
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: bold;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.book-now-btn:hover {
+  background-color: #eab308; /* Darker yellow */
+}
+
+.contact-us-btn {
+  background-color: #111827; /* Darker navy for button */
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: bold;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background-color 0.2s ease-in-out;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+.contact-us-btn:hover {
+  background-color: #374151; /* Lighter navy on hover */
+}
+
+.icon {
+  font-size: 1.2rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .premium-travel-container {
+    flex-direction: column;
+    text-align: center;
+    padding: 30px 15px;
+  }
+
+  .premium-travel-content {
+    margin-right: 0;
+    margin-bottom: 20px;
+  }
+
+  .premium-travel-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+}

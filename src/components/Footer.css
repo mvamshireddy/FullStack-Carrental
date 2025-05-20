@@ -1,0 +1,148 @@
+/* General Footer Styling */
+.footer {
+  background-color: #0f172a; /* Dark navy background */
+  color: white;
+  padding: 40px 20px;
+  font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.footer-container {
+  display: flex;
+  flex-wrap: wrap; /* Allow sections to wrap like "how it works" */
+  gap: 20px; /* Space between sections */
+  justify-content: space-between; /* Distribute sections evenly */
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.footer-section {
+  flex: 1 1 calc(25% - 20px); /* Responsive sections with 4 columns on large screens */
+  min-width: 200px; /* Minimum width for each section */
+}
+
+.footer-heading {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.footer-description {
+  margin-bottom: 20px;
+  color: #cbd5e1; /* Light gray */
+}
+
+.footer-social {
+  display: flex;
+  gap: 10px;
+}
+
+.social-icon {
+  font-size: 1.2rem;
+  color: white;
+  transition: color 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.social-icon:hover {
+  color: #facc15; /* Yellow on hover */
+}
+
+.footer-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-links li {
+  margin-bottom: 10px;
+}
+
+.footer-links a {
+  color: white;
+  text-decoration: none;
+  transition: color 0.2s ease-in-out;
+}
+
+.footer-links a:hover {
+  color: #facc15; /* Yellow on hover */
+}
+
+.footer-contact {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-contact li {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  color: #cbd5e1; /* Light gray */
+}
+
+.contact-icon {
+  margin-right: 10px;
+  font-size: 1.2rem;
+  color: #facc15; /* Yellow for icons */
+}
+
+.footer-bottom {
+  border-top: 1px solid #374151; /* Subtle border */
+  margin-top: 30px;
+  padding-top: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  color: #cbd5e1; /* Light gray */
+  flex-wrap: wrap;
+}
+
+.footer-bottom p {
+  margin: 0; /* Remove any margin from the copyright text */
+}
+
+.footer-bottom-links {
+  display: flex;
+  gap: 15px; /* Space between links */
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-bottom-links a {
+  color: #cbd5e1; /* Light gray */
+  text-decoration: none;
+  transition: color 0.2s ease-in-out;
+}
+
+.footer-bottom-links a:hover {
+  color: #facc15; /* Yellow on hover */
+}
+
+/* Responsive Design for Footer */
+@media (max-width: 1024px) {
+  .footer-section {
+    flex: 1 1 calc(50% - 20px); /* Two columns on medium screens */
+  }
+}
+
+@media (max-width: 768px) {
+  .footer-section {
+    flex: 1 1 100%; /* Single column on small screens */
+  }
+
+  .footer-bottom {
+    flex-direction: column; /* Stack copyright and links vertically */
+    gap: 10px; /* Add spacing between items */
+    text-align: center; /* Center-align for small screens */
+  }
+
+  .footer-bottom-links {
+    flex-direction: column; /* Stack links vertically */
+    gap: 10px;
+  }
+}
