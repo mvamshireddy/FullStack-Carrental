@@ -5,6 +5,9 @@ import Footer from "../components/Footer";
 import CarCard from "../components/CarCard";
 import "./BookNow.css";
 import { allCars } from '../data/cars';
+import { getCars } from '../services/api';
+// Then in your code:
+const cars = await getCars();
 
 const SERVICE_FEE = 25; // Fixed service fee
 

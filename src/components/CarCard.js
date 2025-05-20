@@ -2,6 +2,9 @@ import React from "react";
 import { Link } from 'react-router-dom'; 
 import { FaUser, FaSuitcase, FaCheckCircle } from "react-icons/fa";
 import "./CarCard.css";
+import { getCars } from '../services/api';
+// Then in your code:
+const cars = await getCars();
 
 const CarCard = ({ car, isSelected, onSelect, hideBookNowButton }) => {
   // Add image error handling
