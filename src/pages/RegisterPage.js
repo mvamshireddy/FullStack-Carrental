@@ -21,9 +21,19 @@ const RegisterPage = () => {
     setLoading(true);
 
     try {
+      // 1. Register the user
       await axios.post(`${API_URL}/users/register`, form);
-      setSuccessMsg("Registration successful! You can now login.");
-      setTimeout(() => navigate("/login"), 1000);
+
+      // 2. Immediately log in the user after successful registration
+      const loginRes = await axios.post(`${API_URL}/users/login`, {
+        email: form.email,
+        password: form.password
+      });
+      const { token } = loginRes.data;
+      localStorage.setItem('token', token);
+
+      setSuccessMsg("Registration successful! Redirecting...");
+      setTimeout(() => navigate("/"), 1000); // Redirect to home
     } catch (error) {
       setErrorMsg(
         error.response?.data?.message

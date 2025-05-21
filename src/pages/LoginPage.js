@@ -29,7 +29,7 @@ const LoginPage = () => {
       const { token } = response.data;
       localStorage.setItem('token', token);
       setSuccessMsg('Login successful! Redirecting...');
-      setTimeout(() => navigate('/profile'), 1000);
+      setTimeout(() => navigate('/'), 1000);
     } catch (error) {
       setErrorMsg(
         error.response?.data?.message
