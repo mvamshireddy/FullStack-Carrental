@@ -3,24 +3,32 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import CarCard from "../components/CarCard";
+import axios from "axios";
 import "./BookNow.css";
-import { allCars } from "../data/cars";
 import { createBooking } from "../services/booking"; // <-- API service for backend integration
 
-const SERVICE_FEE = 25; // Fixed service fee
+const SERVICE_FEE = 25;
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 
 const BookNow = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("vehicle");
+  const [allVehicles, setAllVehicles] = useState([]);
   const [selectedCar, setSelectedCar] = useState(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("creditCard");
   const [cardNumber, setCardNumber] = useState("");
   const [isBookingConfirmed, setIsBookingConfirmed] = useState(false);
   const [bookingRef, setBookingRef] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [bookingError, setBookingError] = useState(""); // <-- Error message for booking API
+  const [bookingError, setBookingError] = useState("");
 
-  // Pre-fill selectedCar from localStorage on load
+  // Fetch cars from backend and prefill selectedCar from localStorage
+  useEffect(() => {
+    axios.get(`${API_URL}/cars`)
+      .then(res => setAllVehicles(res.data || []))
+      .catch(() => setAllVehicles([]));
+  }, []);
+
   useEffect(() => {
     const storedCar = localStorage.getItem("selectedCar");
     if (storedCar) {
@@ -167,20 +175,27 @@ const BookNow = () => {
       const ref = generateBookingRef();
       setBookingRef(ref);
 
+      // Construct ISO datetime strings for backend
+      const startTime = new Date(
+        `${bookingDetails.pickupStartDate}T${bookingDetails.pickupStartTime}`
+      ).toISOString();
+      const endTime = new Date(
+        `${bookingDetails.dropoffEndDate}T${bookingDetails.dropoffEndTime}`
+      ).toISOString();
+
       // Prepare booking data for backend
       const bookingData = {
-        bookingRef: ref,
-        car: selectedCar,
-        bookingDetails,
-        contactDetails,
-        paymentMethod: selectedPaymentMethod,
-        totalCost: calculateTotalCost(),
-        serviceFee: SERVICE_FEE,
-        bookingDate: getCurrentDate(),
-        timestamp: new Date().toISOString()
+        referenceId: ref,
+        car: selectedCar._id || selectedCar.id, // Use backend _id if present, else fallback to id
+        // Set user here if you have user authentication
+        startTime,
+        endTime,
+        pickupLocation: bookingDetails.pickupLocation,
+        dropoffLocation: bookingDetails.dropoffLocation,
+        status: "active",
+        // Optionally add: contactDetails, payment info, totalCost etc.
       };
 
-      // Send booking to backend
       await createBooking(bookingData);
 
       setIsBookingConfirmed(true);
@@ -196,8 +211,6 @@ const BookNow = () => {
       setIsSubmitting(false);
     }
   };
-
-  const allVehicles = allCars;
 
   return (
     <>
@@ -265,9 +278,9 @@ const BookNow = () => {
                 <div className="vehicles-list">
                   {allVehicles.map((car) => (
                     <CarCard
-                      key={car.id}
+                      key={car._id || car.id || car.name}
                       car={car}
-                      isSelected={selectedCar?.id === car.id}
+                      isSelected={selectedCar?._id === car._id || selectedCar?.id === car.id}
                       onSelect={() => handleCarSelection(car)}
                       hideBookNowButton={true}
                     />
@@ -297,7 +310,7 @@ const BookNow = () => {
                   <input
                     type="date"
                     value={bookingDetails.pickupStartDate}
-                    onClick={(e) => e.target.showPicker()}
+                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
                     onChange={(e) => handleBookingDetailsChange("pickupStartDate", e.target.value)}
                   />
                 </label>
@@ -306,7 +319,7 @@ const BookNow = () => {
                   <input
                     type="time"
                     value={bookingDetails.pickupStartTime}
-                    onClick={(e) => e.target.showPicker()}
+                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
                     onChange={(e) => handleBookingDetailsChange("pickupStartTime", e.target.value)}
                   />
                 </label>
@@ -315,7 +328,7 @@ const BookNow = () => {
                   <input
                     type="date"
                     value={bookingDetails.dropoffEndDate}
-                    onClick={(e) => e.target.showPicker()}
+                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
                     onChange={(e) => handleBookingDetailsChange("dropoffEndDate", e.target.value)}
                   />
                 </label>
@@ -324,7 +337,7 @@ const BookNow = () => {
                   <input
                     type="time"
                     value={bookingDetails.dropoffEndTime}
-                    onClick={(e) => e.target.showPicker()}
+                    onClick={(e) => e.target.showPicker && e.target.showPicker()}
                     onChange={(e) => handleBookingDetailsChange("dropoffEndTime", e.target.value)}
                   />
                 </label>
