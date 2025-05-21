@@ -4,6 +4,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import CarCard from "../components/CarCard";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 
@@ -71,8 +72,10 @@ const staticVehicles = [
 ];
 
 const Vehicles = () => {
+  const navigate = useNavigate();
   const [filteredCategory, setFilteredCategory] = useState("All Vehicles");
   const [backendVehicles, setBackendVehicles] = useState([]);
+  const [mergedVehicles, setMergedVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Fetch cars from backend on mount
@@ -89,13 +92,16 @@ const Vehicles = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  // Merge static and backend cars, avoid duplicates by name
-  const mergedVehicles = [
-    ...staticVehicles,
-    ...backendVehicles.filter(
-      (bcar) => !staticVehicles.some((scar) => scar.name === bcar.name)
-    ),
-  ];
+  // Always merge static and backend cars, avoid duplicates by name
+  useEffect(() => {
+    const merged = [
+      ...staticVehicles,
+      ...backendVehicles.filter(
+        (bcar) => !staticVehicles.some((scar) => scar.name === bcar.name)
+      ),
+    ];
+    setMergedVehicles(merged);
+  }, [backendVehicles]);
 
   // Dynamically generate categories from all available vehicles
   const categorySet = new Set(mergedVehicles.map(car => car.category));
@@ -105,6 +111,12 @@ const Vehicles = () => {
     filteredCategory === "All Vehicles"
       ? mergedVehicles
       : mergedVehicles.filter((vehicle) => vehicle.category === filteredCategory);
+
+  // Handler for booking a car
+  const handleBookNow = (car) => {
+    localStorage.setItem("selectedCar", JSON.stringify(car));
+    navigate("/booknow");
+  };
 
   return (
     <>
@@ -136,7 +148,13 @@ const Vehicles = () => {
             <div style={{ padding: 24 }}>No cars found.</div>
           ) : (
             filteredVehicles.map((car) => (
-              <CarCard key={car._id || car.id || car.name} car={car} />
+              <CarCard
+                key={car._id || car.id || car.name}
+                car={car}
+                onSelect={() => handleBookNow(car)}
+                hideBookNowButton={false}
+                // Do NOT pass isSelected here!
+              />
             ))
           )}
         </div>

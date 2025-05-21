@@ -1,15 +1,30 @@
 const express = require('express');
 const router = express.Router();
-const bookingController = require('../controllers/bookingController');
-const auth = require('../middleware/auth');
+const Booking = require('../models/Booking');
 
-// Create a booking (authenticated)
-router.post('/', auth, bookingController.createBooking);
+// POST /api/bookings
+router.post('/', async (req, res) => {
+  try {
+    const {
+      user, car, staticCar, startTime, endTime,
+      pickupLocation, dropoffLocation, referenceId, status
+    } = req.body;
 
-// Get bookings for user, or all (admin with ?all=true)
-router.get('/', auth, bookingController.getUserBookings);
+    // Accept booking for DB or static car
+    if (!car && !staticCar) {
+      return res.status(400).json({ message: "Car ID or staticCar info required." });
+    }
 
-// Cancel a booking
-router.delete('/:id', auth, bookingController.cancelBooking);
+    const booking = new Booking({
+      user, car, staticCar, startTime, endTime,
+      pickupLocation, dropoffLocation, referenceId, status
+    });
+
+    await booking.save();
+    res.status(201).json({ message: 'Booking created', booking });
+  } catch (e) {
+    res.status(400).json({ message: e.message });
+  }
+});
 
 module.exports = router;

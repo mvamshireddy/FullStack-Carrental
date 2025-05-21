@@ -12,7 +12,6 @@ const CarCard = ({ car, isSelected, onSelect, hideBookNowButton }) => {
   const price = car.price || car.rent || 0;
   const passengers = car.passengers || car.capacity || "-";
   const luggage = car.luggage ?? "-";
-  // category is not shown in card, but you can add it if needed: car.category
 
   // Add image error handling
   const handleImageError = (e) => {
@@ -23,7 +22,7 @@ const CarCard = ({ car, isSelected, onSelect, hideBookNowButton }) => {
   const handleBookNowClick = (e) => {
     e.stopPropagation(); // Prevent card click/select if present
     localStorage.setItem("selectedCar", JSON.stringify(car));
-    window.location.href = "/booknow?activeTab=details";
+    window.location.href = "/booknow";
   };
 
   return (

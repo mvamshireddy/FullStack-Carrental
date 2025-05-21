@@ -5,13 +5,78 @@ import Footer from "../components/Footer";
 import CarCard from "../components/CarCard";
 import axios from "axios";
 import "./BookNow.css";
-import { createBooking } from "../services/booking"; // <-- API service for backend integration
+import { createBooking } from "../services/booking";
 
 const SERVICE_FEE = 25;
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 
+// Static vehicle list, always included for merging
+const staticVehicles = [
+  {
+    id: 1,
+    name: "Mercedes S-Class",
+    image: "/assests/images/mercedes-s-class.png",
+    description: "The pinnacle of luxury sedans, offering unmatched comfort for executive travel.",
+    price: 120,
+    passengers: 3,
+    luggage: 2,
+    category: "Luxury Sedans",
+  },
+  {
+    id: 2,
+    name: "BMW 7 Series",
+    image: "/assests/images/bmw-7-series.png",
+    description: "Blend of performance and luxury with spacious interior for business or leisure.",
+    price: 110,
+    passengers: 3,
+    luggage: 2,
+    category: "Luxury Sedans",
+  },
+  {
+    id: 3,
+    name: "Cadillac Escalade",
+    image: "/assests/images/cadillac-escalade.png",
+    description: "Spacious luxury SUV perfect for group travel with ample luggage space.",
+    price: 150,
+    passengers: 6,
+    luggage: 4,
+    category: "Premium SUVs",
+  },
+  {
+    id: 4,
+    name: "Range Rover",
+    image: "/assests/images/range-rover.png",
+    description: "The epitome of luxury SUVs, combining opulence with off-road capability.",
+    price: 140,
+    passengers: 4,
+    luggage: 3,
+    category: "Premium SUVs",
+  },
+  {
+    id: 5,
+    name: "Mercedes V-Class",
+    image: "/assests/images/mercedes-v-class.png",
+    description: "Spacious luxury van for group travel with exceptional comfort.",
+    price: 160,
+    passengers: 5,
+    luggage: 5,
+    category: "Luxury Vans",
+  },
+  {
+    id: 6,
+    name: "Rolls-Royce Phantom",
+    image: "/assests/images/rolls-royce.png",
+    description: "The ultimate symbol of prestige and luxury for special occasions.",
+    price: 300,
+    passengers: 3,
+    luggage: 2,
+    category: "Ultra Luxury",
+  },
+];
+
 const BookNow = () => {
   const navigate = useNavigate();
+  const [backendVehicles, setBackendVehicles] = useState([]);
   const [activeTab, setActiveTab] = useState("vehicle");
   const [allVehicles, setAllVehicles] = useState([]);
   const [selectedCar, setSelectedCar] = useState(null);
@@ -22,12 +87,23 @@ const BookNow = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingError, setBookingError] = useState("");
 
-  // Fetch cars from backend and prefill selectedCar from localStorage
+  // Fetch backend vehicles and merge with static ones
   useEffect(() => {
     axios.get(`${API_URL}/cars`)
-      .then(res => setAllVehicles(res.data || []))
-      .catch(() => setAllVehicles([]));
+      .then(res => setBackendVehicles(res.data || []))
+      .catch(() => setBackendVehicles([]));
   }, []);
+
+  useEffect(() => {
+    // Merge static and backend cars, avoid duplicates by name
+    const merged = [
+      ...staticVehicles,
+      ...backendVehicles.filter(
+        (bcar) => !staticVehicles.some((scar) => scar.name === bcar.name)
+      ),
+    ];
+    setAllVehicles(merged);
+  }, [backendVehicles]);
 
   useEffect(() => {
     const storedCar = localStorage.getItem("selectedCar");
@@ -171,11 +247,9 @@ const BookNow = () => {
         return;
       }
 
-      // Generate booking reference
       const ref = generateBookingRef();
       setBookingRef(ref);
 
-      // Construct ISO datetime strings for backend
       const startTime = new Date(
         `${bookingDetails.pickupStartDate}T${bookingDetails.pickupStartTime}`
       ).toISOString();
@@ -183,17 +257,14 @@ const BookNow = () => {
         `${bookingDetails.dropoffEndDate}T${bookingDetails.dropoffEndTime}`
       ).toISOString();
 
-      // Prepare booking data for backend
       const bookingData = {
         referenceId: ref,
-        car: selectedCar._id || selectedCar.id, // Use backend _id if present, else fallback to id
-        // Set user here if you have user authentication
+        car: selectedCar._id || selectedCar.id,
         startTime,
         endTime,
         pickupLocation: bookingDetails.pickupLocation,
         dropoffLocation: bookingDetails.dropoffLocation,
         status: "active",
-        // Optionally add: contactDetails, payment info, totalCost etc.
       };
 
       await createBooking(bookingData);
@@ -280,7 +351,12 @@ const BookNow = () => {
                     <CarCard
                       key={car._id || car.id || car.name}
                       car={car}
-                      isSelected={selectedCar?._id === car._id || selectedCar?.id === car.id}
+                      isSelected={
+                        selectedCar
+                          ? (car._id && selectedCar._id && car._id === selectedCar._id) ||
+                            (car.id && selectedCar.id && car.id === selectedCar.id)
+                          : false
+                      }
                       onSelect={() => handleCarSelection(car)}
                       hideBookNowButton={true}
                     />
