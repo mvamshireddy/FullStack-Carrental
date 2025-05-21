@@ -10,7 +10,8 @@ import { Elements, useStripe, useElements, CardElement } from "@stripe/react-str
 import { loadStripe } from "@stripe/stripe-js";
 import api from "../services/axios";
 
-const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUB_KEY || "pk_test_replace_this_key");
+const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUB_KEY);
+console.log("Stripe Key:", process.env.REACT_APP_STRIPE_PUB_KEY);
 
 const SERVICE_FEE = 25;
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
