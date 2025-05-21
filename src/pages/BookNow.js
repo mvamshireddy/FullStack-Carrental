@@ -11,12 +11,11 @@ import { loadStripe } from "@stripe/stripe-js";
 import api from "../services/axios";
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUB_KEY);
-console.log("Stripe Key:", process.env.REACT_APP_STRIPE_PUB_KEY);
 
 const SERVICE_FEE = 25;
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 
-// Static vehicle list, always included for merging
+// Static vehicles
 const staticVehicles = [
   {
     id: 1,
@@ -107,14 +106,13 @@ const BookNow = () => {
   const [activeTab, setActiveTab] = useState("vehicle");
   const [allVehicles, setAllVehicles] = useState([]);
   const [selectedCar, setSelectedCar] = useState(null);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("creditCard");
   const [isBookingConfirmed, setIsBookingConfirmed] = useState(false);
   const [bookingRef, setBookingRef] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingError, setBookingError] = useState("");
   const token = localStorage.getItem("token");
 
-  // Auth check (redirect if not logged in)
+  // Auth check
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -122,15 +120,15 @@ const BookNow = () => {
     }
   }, [navigate]);
 
-  // Fetch backend vehicles and merge with static ones
+  // Fetch backend vehicles
   useEffect(() => {
     axios.get(`${API_URL}/cars`)
       .then(res => setBackendVehicles(res.data || []))
       .catch(() => setBackendVehicles([]));
   }, []);
 
+  // Merge static and backend cars, avoid duplicates by name
   useEffect(() => {
-    // Merge static and backend cars, avoid duplicates by name
     const merged = [
       ...staticVehicles,
       ...backendVehicles.filter(
@@ -229,11 +227,9 @@ const BookNow = () => {
       setLoading(true);
 
       try {
-        // 1. Create payment intent on backend
         const { data } = await api.post("/payments/create-intent", { amount, currency: "usd" });
         const clientSecret = data.clientSecret;
 
-        // 2. Confirm payment on frontend
         const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
           payment_method: {
             card: elements.getElement(CardElement),
@@ -281,19 +277,19 @@ const BookNow = () => {
         `${bookingDetails.dropoffEndDate}T${bookingDetails.dropoffEndTime}`
       ).toISOString();
 
-      // --- UPDATED LOGIC: Allow booking static or backend cars ---
       let carId = null;
       let carType = null;
+      let carDetails = null;
 
       if (selectedCar && selectedCar._id) {
         carId = selectedCar._id;
         carType = "backend";
       } else if (selectedCar && selectedCar.id) {
-        carId = selectedCar.id;
         carType = "static";
+        carDetails = selectedCar;
       }
 
-      if (!carId || !carType) {
+      if ((!carId && carType !== "static") || (carType === "static" && !carDetails)) {
         setBookingError(
           "Selected car is not available for booking. Please select a different vehicle."
         );
@@ -304,7 +300,8 @@ const BookNow = () => {
       const bookingData = {
         referenceId: ref,
         car: carId,
-        carType, // let backend know if static or backend
+        carType,
+        carDetails,
         startTime,
         endTime,
         pickupLocation: bookingDetails.pickupLocation,
@@ -312,8 +309,6 @@ const BookNow = () => {
         status: "active",
         paymentIntentId,
         contactDetails,
-        // Optionally, send more static car data for static cars if backend needs it:
-        ...(carType === "static" ? { carDetails: selectedCar } : {})
       };
 
       await createBooking(bookingData);
@@ -339,7 +334,6 @@ const BookNow = () => {
     return `REF-${timestamp}-${random}`;
   };
 
-  // Date formatting helpers
   const formatDate = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);

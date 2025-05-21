@@ -1,8 +1,7 @@
 const Booking = require('../models/Booking');
-const Car = require('../models/Car');
 const { v4: uuidv4 } = require('uuid');
 
-// Helper: Check for overlapping bookings
+// Helper: Check for overlapping bookings (backend cars only)
 async function isCarAvailable(carId, startTime, endTime) {
   const overlap = await Booking.findOne({
     car: carId,
@@ -17,12 +16,12 @@ async function isCarAvailable(carId, startTime, endTime) {
 // POST /api/bookings
 exports.createBooking = async (req, res) => {
   try {
-    const userId = req.user.userId; // from auth middleware
+    const userId = req.user.userId;
 
     let {
       car,
       carType,
-      carDetails, // for static cars
+      carDetails,
       startTime,
       endTime,
       pickupLocation,
@@ -32,16 +31,18 @@ exports.createBooking = async (req, res) => {
       paymentIntentId
     } = req.body;
 
-    // Validation: required fields
-    if ((!car || carType !== "backend") && (!carDetails || carType !== "static")) {
-      return res.status(400).json({ message: "Car ID (backend) or carDetails (static) required, with correct carType." });
-    }
+    // Required type and details validation
+    if (!carType) return res.status(400).json({ message: "carType required." });
+    if (carType === "backend" && !car)
+      return res.status(400).json({ message: "Backend car id required." });
+    if (carType === "static" && !carDetails)
+      return res.status(400).json({ message: "Static car details required." });
+
     if (!startTime || !endTime)
       return res.status(400).json({ message: "Start and end times required." });
     if (!pickupLocation || !dropoffLocation)
       return res.status(400).json({ message: "Pickup and dropoff locations required." });
 
-    // Validation: date logic
     const start = new Date(startTime);
     const end = new Date(endTime);
     if (isNaN(start) || isNaN(end))
@@ -51,16 +52,14 @@ exports.createBooking = async (req, res) => {
     if (end <= start)
       return res.status(400).json({ message: "End time must be after start time." });
 
-    // Car availability (only for DB cars)
+    // Check car availability for backend cars
     if (carType === "backend" && car) {
       const available = await isCarAvailable(car, start, end);
       if (!available) return res.status(409).json({ message: "Car is not available for the selected dates." });
     }
 
-    // Generate reference ID if not provided
     if (!referenceId) referenceId = uuidv4();
 
-    // Create booking
     const booking = new Booking({
       user: userId,
       car: carType === "backend" ? car : undefined,
