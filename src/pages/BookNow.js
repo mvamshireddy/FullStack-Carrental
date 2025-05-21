@@ -79,6 +79,27 @@ const staticVehicles = [
   },
 ];
 
+const CARD_ELEMENT_OPTIONS = {
+  style: {
+    base: {
+      color: "#333",
+      fontSize: "16px",
+      fontFamily: "inherit",
+      backgroundColor: "#fafbfc",
+      border: "1px solid #ddd",
+      borderRadius: "4px",
+      padding: "12px",
+      '::placeholder': {
+        color: "#999",
+      },
+    },
+    invalid: {
+      color: "#e5424d",
+    },
+  },
+  hidePostalCode: true,
+};
+
 const BookNow = () => {
   const navigate = useNavigate();
   const [backendVehicles, setBackendVehicles] = useState([]);
@@ -90,11 +111,12 @@ const BookNow = () => {
   const [bookingRef, setBookingRef] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingError, setBookingError] = useState("");
+  const token = localStorage.getItem("token");
 
   // Auth check (redirect if not logged in)
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (!user) {
+    const token = localStorage.getItem("token");
+    if (!token) {
       navigate("/login?redirect=/booknow");
     }
   }, [navigate]);
@@ -232,7 +254,9 @@ const BookNow = () => {
     return (
       <form onSubmit={handlePayment} className="payment-form">
         <h3>Enter Card Details</h3>
-        <CardElement />
+        <div className="custom-card-element">
+          <CardElement options={CARD_ELEMENT_OPTIONS} />
+        </div>
         <button type="submit" disabled={!stripe || loading} className="confirm-button" style={{marginTop: 16}}>
           {loading ? "Processing..." : "Pay & Confirm Booking"}
         </button>

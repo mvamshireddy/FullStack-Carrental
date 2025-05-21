@@ -21,8 +21,14 @@ const CarCard = ({ car, isSelected, onSelect, hideBookNowButton }) => {
   // Function to handle "Book Now" button click
   const handleBookNowClick = (e) => {
     e.stopPropagation(); // Prevent card click/select if present
-    localStorage.setItem("selectedCar", JSON.stringify(car));
-    window.location.href = "/booknow";
+    const token = localStorage.getItem("token");
+    if (!token) {
+      // Redirect to login with redirect back to booknow
+      window.location.href = "/login?redirect=/booknow";
+    } else {
+      localStorage.setItem("selectedCar", JSON.stringify(car));
+      window.location.href = "/booknow";
+    }
   };
 
   return (

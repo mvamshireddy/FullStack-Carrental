@@ -761,3 +761,55 @@
     background-color: white;
   }
 }
+/* --- Stripe CardElement Custom Styling --- */
+.custom-card-element {
+  background: #fafbfc;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  /* Ensures the card element matches other input fields' look */
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.custom-card-element .StripeElement {
+  background: transparent;
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 1rem;
+  color: #333;
+  font-family: inherit;
+  letter-spacing: 1px;
+}
+
+.custom-card-element .StripeElement--focus {
+  border-color: #007bff;
+}
+
+.custom-card-element .StripeElement--invalid {
+  color: #e5424d;
+}
+
+.custom-card-element .StripeElement input {
+  background: transparent !important;
+  color: #333 !important;
+  font-size: 1rem !important;
+  border: none !important;
+  outline: none !important;
+}
+
+/* Placeholder color for the CardElement */
+.custom-card-element .StripeElement::placeholder {
+  color: #999 !important;
+  opacity: 1 !important;
+}
+
+/* Show error below the payment field if needed */
+.payment-form .stripe-error-message {
+  color: #e5424d;
+  font-size: 0.95rem;
+  margin-top: 6px;
+  margin-bottom: 8px;
+}

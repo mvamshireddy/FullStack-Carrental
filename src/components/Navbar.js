@@ -7,6 +7,8 @@ import './Navbar.css';
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  const token = localStorage.getItem("token");
+
   // Toggle mobile menu open/close
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -101,6 +103,7 @@ const Navbar = () => {
           <button className="btn-book-now" onClick={toggleMobileMenu}>
             Book Now
           </button>
+
 
           {/* Sign In / Register Link */}
           <div className="navbar-signin">
