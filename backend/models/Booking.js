@@ -2,8 +2,17 @@ const mongoose = require('mongoose');
 
 const bookingSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false },
-  car: { type: mongoose.Schema.Types.ObjectId, ref: 'Car', required: false },
-  staticCar: { /* ...same as before... */ },
+  car: { type: mongoose.Schema.Types.ObjectId, ref: 'Car', required: false }, // for backend cars
+  staticCar: { // for static (frontend) cars
+    id: Number,
+    name: String,
+    image: String,
+    description: String,
+    price: Number,
+    passengers: Number,
+    luggage: Number,
+    category: String
+  },
   startTime: { type: Date, required: true },
   endTime: { type: Date, required: true },
   pickupLocation: { type: String, required: true },

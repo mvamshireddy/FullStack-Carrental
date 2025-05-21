@@ -22,13 +22,13 @@ router.post('/', auth, async (req, res) => {
     const userId = req.user.userId; // from auth middleware
 
     let {
-      car, staticCar, startTime, endTime,
+      car, carType, carDetails, startTime, endTime,
       pickupLocation, dropoffLocation, referenceId, status, paymentIntentId
     } = req.body;
 
     // Validation: required fields
-    if (!car && !staticCar)
-      return res.status(400).json({ message: "Car ID or staticCar info required." });
+    if (!car && !carDetails)
+      return res.status(400).json({ message: "Car ID or carDetails info required." });
     if (!startTime || !endTime)
       return res.status(400).json({ message: "Start and end times required." });
     if (!pickupLocation || !dropoffLocation)
@@ -45,7 +45,7 @@ router.post('/', auth, async (req, res) => {
       return res.status(400).json({ message: "End time must be after start time." });
 
     // Car availability (only for DB cars)
-    if (car) {
+    if (carType === "backend" && car) {
       const available = await isCarAvailable(car, start, end);
       if (!available) return res.status(409).json({ message: "Car is not available for the selected dates." });
     }
@@ -55,8 +55,8 @@ router.post('/', auth, async (req, res) => {
 
     const booking = new Booking({
       user: userId,
-      car,
-      staticCar,
+      car: carType === "backend" ? car : undefined,
+      staticCar: carType === "static" ? carDetails : undefined,
       startTime: start,
       endTime: end,
       pickupLocation,

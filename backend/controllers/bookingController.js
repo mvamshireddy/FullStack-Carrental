@@ -19,11 +19,23 @@ exports.createBooking = async (req, res) => {
   try {
     const userId = req.user.userId; // from auth middleware
 
-    let { car, staticCar, startTime, endTime, pickupLocation, dropoffLocation, referenceId, status, paymentIntentId } = req.body;
+    let {
+      car,
+      carType,
+      carDetails, // for static cars
+      startTime,
+      endTime,
+      pickupLocation,
+      dropoffLocation,
+      referenceId,
+      status,
+      paymentIntentId
+    } = req.body;
 
     // Validation: required fields
-    if (!car && !staticCar)
-      return res.status(400).json({ message: "Car ID or staticCar info required." });
+    if ((!car || carType !== "backend") && (!carDetails || carType !== "static")) {
+      return res.status(400).json({ message: "Car ID (backend) or carDetails (static) required, with correct carType." });
+    }
     if (!startTime || !endTime)
       return res.status(400).json({ message: "Start and end times required." });
     if (!pickupLocation || !dropoffLocation)
@@ -32,16 +44,18 @@ exports.createBooking = async (req, res) => {
     // Validation: date logic
     const start = new Date(startTime);
     const end = new Date(endTime);
-    if (start < new Date()) return res.status(400).json({ message: "Start time cannot be in the past." });
-    if (end <= start) return res.status(400).json({ message: "End time must be after start time." });
+    if (isNaN(start) || isNaN(end))
+      return res.status(400).json({ message: "Invalid dates provided." });
+    if (start < new Date())
+      return res.status(400).json({ message: "Start time cannot be in the past." });
+    if (end <= start)
+      return res.status(400).json({ message: "End time must be after start time." });
 
     // Car availability (only for DB cars)
-    if (car) {
+    if (carType === "backend" && car) {
       const available = await isCarAvailable(car, start, end);
       if (!available) return res.status(409).json({ message: "Car is not available for the selected dates." });
     }
-
-    // If using Stripe, require successful paymentIntentId (see payment section)
 
     // Generate reference ID if not provided
     if (!referenceId) referenceId = uuidv4();
@@ -49,8 +63,8 @@ exports.createBooking = async (req, res) => {
     // Create booking
     const booking = new Booking({
       user: userId,
-      car,
-      staticCar,
+      car: carType === "backend" ? car : undefined,
+      staticCar: carType === "static" ? carDetails : undefined,
       startTime: start,
       endTime: end,
       pickupLocation,

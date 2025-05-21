@@ -281,16 +281,39 @@ const BookNow = () => {
         `${bookingDetails.dropoffEndDate}T${bookingDetails.dropoffEndTime}`
       ).toISOString();
 
+      // --- UPDATED LOGIC: Allow booking static or backend cars ---
+      let carId = null;
+      let carType = null;
+
+      if (selectedCar && selectedCar._id) {
+        carId = selectedCar._id;
+        carType = "backend";
+      } else if (selectedCar && selectedCar.id) {
+        carId = selectedCar.id;
+        carType = "static";
+      }
+
+      if (!carId || !carType) {
+        setBookingError(
+          "Selected car is not available for booking. Please select a different vehicle."
+        );
+        setIsSubmitting(false);
+        return;
+      }
+
       const bookingData = {
         referenceId: ref,
-        car: selectedCar._id || selectedCar.id,
+        car: carId,
+        carType, // let backend know if static or backend
         startTime,
         endTime,
         pickupLocation: bookingDetails.pickupLocation,
         dropoffLocation: bookingDetails.dropoffLocation,
         status: "active",
         paymentIntentId,
-        contactDetails, // optional: send contact details if backend supports
+        contactDetails,
+        // Optionally, send more static car data for static cars if backend needs it:
+        ...(carType === "static" ? { carDetails: selectedCar } : {})
       };
 
       await createBooking(bookingData);
