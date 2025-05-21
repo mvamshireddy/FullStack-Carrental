@@ -6,6 +6,11 @@ import CarCard from "../components/CarCard";
 import axios from "axios";
 import "./BookNow.css";
 import { createBooking } from "../services/booking";
+import { Elements, useStripe, useElements, CardElement } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+import api from "../services/axios";
+
+const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUB_KEY || "pk_test_replace_this_key");
 
 const SERVICE_FEE = 25;
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
@@ -81,11 +86,18 @@ const BookNow = () => {
   const [allVehicles, setAllVehicles] = useState([]);
   const [selectedCar, setSelectedCar] = useState(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("creditCard");
-  const [cardNumber, setCardNumber] = useState("");
   const [isBookingConfirmed, setIsBookingConfirmed] = useState(false);
   const [bookingRef, setBookingRef] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingError, setBookingError] = useState("");
+
+  // Auth check (redirect if not logged in)
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user) {
+      navigate("/login?redirect=/booknow");
+    }
+  }, [navigate]);
 
   // Fetch backend vehicles and merge with static ones
   useEffect(() => {
@@ -113,44 +125,6 @@ const BookNow = () => {
       localStorage.removeItem("selectedCar");
     }
   }, []);
-
-  // Card/UPI/Bank field handlers (validation/formatting)
-  const handleCardNumberChange = (e) => {
-    let value = e.target.value.replace(/\D/g, "");
-    if (value.length > 16) value = value.slice(0, 16);
-    const formattedValue = value.replace(/(\d{4})(?=\d)/g, "$1 ");
-    setCardNumber(formattedValue);
-  };
-  const handleExpiryDateChange = (e) => {
-    let value = e.target.value.replace(/\D/g, "");
-    if (value.length > 4) value = value.slice(0, 4);
-    if (value.length > 2) value = value.slice(0, 2) + "/" + value.slice(2);
-    e.target.value = value;
-  };
-  const handleCVVChange = (e) => {
-    let value = e.target.value.replace(/\D/g, "");
-    if (value.length > 3) value = value.slice(0, 3);
-    e.target.value = value;
-  };
-
-  // Generate booking reference
-  const generateBookingRef = () => {
-    const timestamp = new Date().toISOString().replace(/[-:.TZ]/g, '').substring(0, 8);
-    const random = Math.floor(100000 + Math.random() * 900000);
-    return `REF-${timestamp}-${random}`;
-  };
-
-  // Date formatting helpers
-  const formatDate = (dateString) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-  };
-  const getCurrentDate = () => {
-    const now = new Date();
-    return now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-  };
-  const handlePrint = () => window.print();
 
   // Booking details and contact
   const [bookingDetails, setBookingDetails] = useState({
@@ -221,32 +195,57 @@ const BookNow = () => {
     !errors.phoneNumber
   );
 
-  // SUBMIT: Confirm booking and send to backend
-  const handleConfirmBooking = async () => {
-    if (isSubmitting) return;
+  // Stripe Payment Section
+  function PaymentSection({ amount, onPaymentSuccess, onError }) {
+    const stripe = useStripe();
+    const elements = useElements();
+    const [loading, setLoading] = useState(false);
+
+    const handlePayment = async (e) => {
+      e.preventDefault();
+      setLoading(true);
+
+      try {
+        // 1. Create payment intent on backend
+        const { data } = await api.post("/payments/create-intent", { amount, currency: "usd" });
+        const clientSecret = data.clientSecret;
+
+        // 2. Confirm payment on frontend
+        const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+          payment_method: {
+            card: elements.getElement(CardElement),
+          },
+        });
+
+        setLoading(false);
+        if (error) {
+          onError(error.message);
+        } else if (paymentIntent.status === "succeeded") {
+          onPaymentSuccess(paymentIntent.id);
+        }
+      } catch (err) {
+        setLoading(false);
+        onError(err.message);
+      }
+    };
+
+    return (
+      <form onSubmit={handlePayment} className="payment-form">
+        <h3>Enter Card Details</h3>
+        <CardElement />
+        <button type="submit" disabled={!stripe || loading} className="confirm-button" style={{marginTop: 16}}>
+          {loading ? "Processing..." : "Pay & Confirm Booking"}
+        </button>
+      </form>
+    );
+  }
+
+  // Booking confirmation handler (calls backend only after payment)
+  const handleBookingAfterPayment = async (paymentIntentId) => {
     setIsSubmitting(true);
     setBookingError("");
 
     try {
-      // Payment method validation
-      if (selectedPaymentMethod === "creditCard" && !cardNumber) {
-        setBookingError("Please complete the credit card details before confirming the booking.");
-        setIsSubmitting(false);
-        return;
-      }
-      if (selectedPaymentMethod === "upi" && !document.querySelector('input[placeholder="example@upi"]').value) {
-        setBookingError("Please enter your UPI ID before confirming the booking.");
-        setIsSubmitting(false);
-        return;
-      }
-      if (selectedPaymentMethod === "bankTransfer" &&
-        (!document.querySelector('input[placeholder="Enter your bank account number"]').value ||
-          !document.querySelector('input[placeholder="Enter IFSC code"]').value)) {
-        setBookingError("Please complete the bank transfer details before confirming the booking.");
-        setIsSubmitting(false);
-        return;
-      }
-
       const ref = generateBookingRef();
       setBookingRef(ref);
 
@@ -265,6 +264,8 @@ const BookNow = () => {
         pickupLocation: bookingDetails.pickupLocation,
         dropoffLocation: bookingDetails.dropoffLocation,
         status: "active",
+        paymentIntentId,
+        contactDetails, // optional: send contact details if backend supports
       };
 
       await createBooking(bookingData);
@@ -283,6 +284,26 @@ const BookNow = () => {
     }
   };
 
+  // Generate booking reference
+  const generateBookingRef = () => {
+    const timestamp = new Date().toISOString().replace(/[-:.TZ]/g, '').substring(0, 8);
+    const random = Math.floor(100000 + Math.random() * 900000);
+    return `REF-${timestamp}-${random}`;
+  };
+
+  // Date formatting helpers
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  };
+  const getCurrentDate = () => {
+    const now = new Date();
+    return now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  };
+  const handlePrint = () => window.print();
+
+  // --- UI ---
   return (
     <>
       <Navbar />
@@ -317,7 +338,7 @@ const BookNow = () => {
             </button>
             <button
               className={`tab ${activeTab === "payment" ? "active" : ""}`}
-              onClick={() => handleTabClick("payment")}
+              onClick={() => setActiveTab("payment")}
               disabled={!isContactPageComplete() || isBookingConfirmed}
             >
               Payment
@@ -554,80 +575,17 @@ const BookNow = () => {
                   <strong>${calculateTotalCost()}</strong>
                 </div>
               </div>
-              <label className="payment-method-label" htmlFor="paymentMethod">
-                Please select a payment method:
-              </label>
-              <select
-                id="paymentMethod"
-                className="payment-method-dropdown"
-                value={selectedPaymentMethod}
-                onChange={(e) => setSelectedPaymentMethod(e.target.value)}
-              >
-                <option value="creditCard">Credit Card</option>
-                <option value="upi">UPI</option>
-                <option value="bankTransfer">Bank Transfer</option>
-              </select>
-              {selectedPaymentMethod === "creditCard" && (
-                <form className="payment-form">
-                  <h3>Credit Card Payment</h3>
-                  <label>Cardholder Name</label>
-                  <input type="text" placeholder="Name as it appears on the card" />
-                  <label>Card Number</label>
-                  <input
-                    type="text"
-                    className="card-number-input"
-                    placeholder="1234 5678 9012 3456"
-                    value={cardNumber}
-                    onChange={handleCardNumberChange}
-                  />
-                  <div className="card-details">
-                    <label>
-                      Expiry Date
-                      <input
-                        type="text"
-                        placeholder="MM/YY"
-                        onChange={handleExpiryDateChange}
-                        maxLength="5"
-                      />
-                    </label>
-                    <label>
-                      CVV
-                      <input
-                        type="text"
-                        placeholder="123"
-                        onChange={handleCVVChange}
-                        maxLength="3"
-                      />
-                    </label>
-                  </div>
-                </form>
-              )}
-              {selectedPaymentMethod === "upi" && (
-                <form className="payment-form">
-                  <h3>UPI Payment</h3>
-                  <label>UPI ID</label>
-                  <input type="text" placeholder="example@upi" />
-                </form>
-              )}
-              {selectedPaymentMethod === "bankTransfer" && (
-                <form className="payment-form">
-                  <h3>Bank Transfer</h3>
-                  <label>Bank Account Number</label>
-                  <input type="text" placeholder="Enter your bank account number" />
-                  <label>IFSC Code</label>
-                  <input type="text" placeholder="Enter IFSC code" />
-                </form>
-              )}
+              {/* Stripe Elements Payment */}
+              <Elements stripe={stripePromise}>
+                <PaymentSection
+                  amount={calculateTotalCost()}
+                  onPaymentSuccess={handleBookingAfterPayment}
+                  onError={setBookingError}
+                />
+              </Elements>
               <div className="action-buttons">
                 <button className="cancel-button" onClick={() => handleTabClick("contact")}>
                   Back
-                </button>
-                <button
-                  className={`confirm-button ${isSubmitting ? "submitting" : ""}`}
-                  onClick={handleConfirmBooking}
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Processing..." : "Confirm Booking"}
                 </button>
               </div>
             </div>
@@ -697,10 +655,7 @@ const BookNow = () => {
                     </div>
                     <div className="summary-item">
                       <span className="summary-label">Payment Method</span>
-                      <span className="summary-value">
-                        {selectedPaymentMethod === "creditCard" ? "Credit Card" :
-                          selectedPaymentMethod === "upi" ? "UPI" : "Bank Transfer"}
-                      </span>
+                      <span className="summary-value">Credit Card</span>
                     </div>
                   </div>
                   <div className="confirmation-price">
