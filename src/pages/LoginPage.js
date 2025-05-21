@@ -1,11 +1,7 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import './LoginPage.css';
-import { loginUser } from "../services/auth";
-
-// inside your component
-
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
@@ -16,20 +12,22 @@ const LoginPage = () => {
   const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectPath = new URLSearchParams(location.search).get('redirect') || '/';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
     setSuccessMsg('');
     setLoading(true);
-  
 
     try {
       const response = await axios.post(`${API_URL}/users/login`, { email, password });
-      const { token } = response.data;
+      const { token, user } = response.data;
       localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
       setSuccessMsg('Login successful! Redirecting...');
-      setTimeout(() => navigate('/'), 1000);
+      setTimeout(() => navigate(redirectPath), 1000);
     } catch (error) {
       setErrorMsg(
         error.response?.data?.message
@@ -79,7 +77,7 @@ const LoginPage = () => {
         {errorMsg && <div style={{ color: 'red', marginTop: 8 }}>{errorMsg}</div>}
         {successMsg && <div style={{ color: 'green', marginTop: 8 }}>{successMsg}</div>}
         <div className="divider">OR</div>
-        <Link to="/register">Don&apos;t have an account? Register</Link>
+        <Link to="/register">Don't have an account? Register</Link>
         <br />
         <Link to="/forgot-password">Forgot password?</Link>
       </div>

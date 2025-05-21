@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import "./ProfilePage.css"; 
+import "./ProfilePage.css";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 
@@ -16,9 +16,13 @@ const ProfilePage = () => {
       .get(`${API_URL}/users/profile`, {
         headers: { Authorization: `Bearer ${token}` },
       })
-      .then((res) => setUser(res.data))
+      .then((res) => {
+        setUser(res.data);
+        localStorage.setItem("user", JSON.stringify(res.data));
+      })
       .catch(() => {
         localStorage.removeItem("token");
+        localStorage.removeItem("user");
         navigate("/login");
       });
   }, [navigate]);
@@ -35,6 +39,7 @@ const ProfilePage = () => {
         style={{ marginTop: 24 }}
         onClick={() => {
           localStorage.removeItem("token");
+          localStorage.removeItem("user");
           navigate("/login");
         }}
       >Logout</button>

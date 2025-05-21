@@ -28,7 +28,8 @@ exports.createBooking = async (req, res) => {
       dropoffLocation,
       referenceId,
       status,
-      paymentIntentId
+      paymentIntentId,
+      contactDetails
     } = req.body;
 
     // Required type and details validation
@@ -70,12 +71,24 @@ exports.createBooking = async (req, res) => {
       dropoffLocation,
       referenceId,
       status: status || 'active',
-      paymentIntentId
+      paymentIntentId,
+      contactDetails
     });
 
     await booking.save();
     res.status(201).json({ message: 'Booking created', booking });
   } catch (e) {
     res.status(400).json({ message: e.message });
+  }
+};
+
+// GET /api/bookings/:referenceId
+exports.getBookingByReferenceId = async (req, res) => {
+  try {
+    const booking = await Booking.findOne({ referenceId: req.params.referenceId });
+    if (!booking) return res.status(404).json({ message: "Booking not found" });
+    res.json(booking);
+  } catch (e) {
+    res.status(500).json({ message: e.message });
   }
 };

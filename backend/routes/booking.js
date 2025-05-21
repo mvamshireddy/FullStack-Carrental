@@ -4,6 +4,9 @@ const Booking = require('../models/Booking');
 const auth = require('../middleware/auth');
 const { v4: uuidv4 } = require('uuid');
 
+<Route path="/confirmation/:bookingRef" element={<BookingConfirmation />} />
+router.get('/:referenceId', bookingController.getBookingByReferenceId);
+
 // Helper: Check for overlapping bookings (car unavailable)
 async function isCarAvailable(carId, startTime, endTime) {
   const overlap = await Booking.findOne({

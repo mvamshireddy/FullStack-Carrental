@@ -3,117 +3,52 @@ import { useParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import "./BookingConfirmation.css";
-import axios from 'axios';
+import axios from "axios";
 
+const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 
 const BookingConfirmation = () => {
-  const { bookingRef } = useParams(); // Get booking reference from URL
+  const { bookingRef } = useParams(); // bookingRef from URL
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [bookingData, setBookingData] = useState(null);
+  const [booking, setBooking] = useState(null);
 
   useEffect(() => {
-    // Fetch booking details from API using the reference
-    const fetchBookingDetails = async () => {
+    const fetchBooking = async () => {
       try {
         setLoading(true);
-        // In a real implementation, you would replace this with your actual API endpoint
-        // Example: const response = await axios.get(`http://localhost:5000/api/bookings/reference/${bookingRef}`);
-        
-        // For now, we'll use a mock booking from localStorage if available
-        const storedBooking = localStorage.getItem("confirmedBooking");
-        
-        if (storedBooking) {
-          setBookingData(JSON.parse(storedBooking));
-          setLoading(false);
-        } else {
-          // Simulate API response
-          // Replace this with actual API call when backend is ready
-          setTimeout(() => {
-            // Mock data for demonstration
-            setBookingData({
-              bookingRef: bookingRef || "REF-123456",
-              car: JSON.parse(localStorage.getItem("selectedCar")) || {
-                name: "Sample Car",
-                category: "Luxury",
-                image: "/assets/images/car1.jpg",
-                price: 120,
-                passengers: 4
-              },
-              bookingDetails: JSON.parse(localStorage.getItem("bookingDetails")) || {
-                pickupStartDate: "2025-05-20",
-                pickupStartTime: "10:00",
-                dropoffEndDate: "2025-05-21",
-                dropoffEndTime: "10:00",
-                pickupLocation: "Airport Terminal 1",
-                dropoffLocation: "City Center"
-              },
-              contactDetails: JSON.parse(localStorage.getItem("contactDetails")) || {
-                fullName: "John Doe",
-                email: "john@example.com",
-                phoneNumber: "1234567890",
-                specialRequests: ""
-              },
-              paymentMethod: localStorage.getItem("paymentMethod") || "creditCard",
-              totalCost: localStorage.getItem("totalCost") || 250,
-              serviceFee: 25,
-              bookingDate: getCurrentDate()
-            });
-            setLoading(false);
-          }, 1000);
-        }
+        setError(null);
+        // Fetch from your API endpoint by referenceId
+        const res = await axios.get(`${API_URL}/bookings/${bookingRef}`);
+        setBooking(res.data);
       } catch (err) {
-        console.error("Error fetching booking details:", err);
-        setError("Could not load booking details. Please try again.");
+        setError("Could not load booking details. Please check your reference or try again.");
+      } finally {
         setLoading(false);
       }
     };
-
-    fetchBookingDetails();
+    fetchBooking();
   }, [bookingRef]);
 
-  // Function to format date for display
+  // Format date nicely
   const formatDate = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   };
 
-  // Function to get current date for booking confirmation
-  const getCurrentDate = () => {
-    const now = new Date();
-    return now.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
-  };
-
-  // Calculate duration in hours between two dates/times
-  const calculateDurationInHours = (startDate, startTime, endDate, endTime) => {
-    if (!startDate || !endDate) return 0;
-
-    const start = new Date(`${startDate}T${startTime}`);
-    const end = new Date(`${endDate}T${endTime}`);
-
+  // Calculate duration in hours
+  const calculateDurationInHours = (startTime, endTime) => {
+    if (!startTime || !endTime) return 0;
+    const start = new Date(startTime);
+    const end = new Date(endTime);
     const diffInMs = end - start;
-    return Math.max(1, Math.ceil(diffInMs / (1000 * 60 * 60))); // Minimum 1 hour
+    return Math.max(1, Math.ceil(diffInMs / (1000 * 60 * 60)));
   };
 
-  // Handle print functionality
-  const handlePrint = () => {
-    window.print();
-  };
-
-  // Return to home page
-  const handleReturnHome = () => {
-    navigate('/');
-  };
+  const handlePrint = () => window.print();
+  const handleReturnHome = () => navigate('/');
 
   if (loading) {
     return (
@@ -143,7 +78,7 @@ const BookingConfirmation = () => {
     );
   }
 
-  if (!bookingData) {
+  if (!booking) {
     return (
       <>
         <Navbar />
@@ -158,14 +93,15 @@ const BookingConfirmation = () => {
     );
   }
 
-  // Calculate duration if we have the booking details
-  const duration = bookingData.bookingDetails ? 
-    calculateDurationInHours(
-      bookingData.bookingDetails.pickupStartDate,
-      bookingData.bookingDetails.pickupStartTime,
-      bookingData.bookingDetails.dropoffEndDate,
-      bookingData.bookingDetails.dropoffEndTime
-    ) : 0;
+  // Use car info (backend or static)
+  const car = booking.car || booking.staticCar || {};
+  const contact = booking.contactDetails || {};
+  const duration = calculateDurationInHours(booking.startTime, booking.endTime);
+
+  // Calculate price if needed
+  const rentalCost = car.price && duration ? car.price * duration : '-';
+  const serviceFee = booking.serviceFee || 25;
+  const totalCost = booking.totalCost || (Number(rentalCost) + Number(serviceFee));
 
   return (
     <>
@@ -183,59 +119,55 @@ const BookingConfirmation = () => {
           <div className="confirmation-details">
             <div className="confirmation-ref">
               <h3>Booking Reference</h3>
-              <p className="ref-number">{bookingData.bookingRef}</p>
+              <p className="ref-number">{booking.referenceId}</p>
             </div>
             
             <div className="confirmation-summary">
-              <div className="booking summary h">
               <h3>Booking Summary</h3>
-              </div>
-              
               <div className="summary-car">
                 <img 
-                  src={bookingData.car.image} 
-                  alt={bookingData.car.name} 
+                  src={car.image} 
+                  alt={car.name} 
                   className="summary-car-img" 
-                  onError={(e) => e.target.src = "/assets/images/default-car.jpg"} 
+                  onError={e => e.target.src = "/assets/images/default-car.jpg"}
                 />
                 <div className="summary-car-info">
-                  <h4 className="summary-car-name">{bookingData.car.name}</h4>
-                  <p className="summary-car-category">{bookingData.car.category}</p>
+                  <h4 className="summary-car-name">{car.name}</h4>
+                  <p className="summary-car-category">{car.category}</p>
                 </div>
               </div>
-              
               <div className="summary-grid">
                 <div className="summary-item">
                   <span className="summary-label">Booking Date</span>
-                  <span className="summary-value">{bookingData.bookingDate || getCurrentDate()}</span>
+                  <span className="summary-value">{formatDate(booking.createdAt)}</span>
                 </div>
                 <div className="summary-item">
                   <span className="summary-label">Customer</span>
-                  <span className="summary-value">{bookingData.contactDetails.fullName}</span>
+                  <span className="summary-value">{contact.fullName}</span>
                 </div>
                 <div className="summary-item">
                   <span className="summary-label">Email</span>
-                  <span className="summary-value">{bookingData.contactDetails.email}</span>
+                  <span className="summary-value">{contact.email}</span>
                 </div>
                 <div className="summary-item">
                   <span className="summary-label">Phone</span>
-                  <span className="summary-value">{bookingData.contactDetails.phoneNumber}</span>
+                  <span className="summary-value">{contact.phoneNumber}</span>
                 </div>
                 <div className="summary-item">
                   <span className="summary-label">Pickup Date</span>
-                  <span className="summary-value">{formatDate(bookingData.bookingDetails.pickupStartDate)}</span>
+                  <span className="summary-value">{formatDate(booking.startTime)}</span>
                 </div>
                 <div className="summary-item">
                   <span className="summary-label">Pickup Time</span>
-                  <span className="summary-value">{bookingData.bookingDetails.pickupStartTime}</span>
+                  <span className="summary-value">{new Date(booking.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
                 <div className="summary-item">
                   <span className="summary-label">Pickup Location</span>
-                  <span className="summary-value">{bookingData.bookingDetails.pickupLocation}</span>
+                  <span className="summary-value">{booking.pickupLocation}</span>
                 </div>
                 <div className="summary-item">
                   <span className="summary-label">Dropoff Location</span>
-                  <span className="summary-value">{bookingData.bookingDetails.dropoffLocation}</span>
+                  <span className="summary-value">{booking.dropoffLocation}</span>
                 </div>
                 <div className="summary-item">
                   <span className="summary-label">Duration</span>
@@ -243,30 +175,25 @@ const BookingConfirmation = () => {
                 </div>
                 <div className="summary-item">
                   <span className="summary-label">Payment Method</span>
-                  <span className="summary-value">
-                    {bookingData.paymentMethod === "creditCard" ? "Credit Card" : 
-                     bookingData.paymentMethod === "upi" ? "UPI" : "Bank Transfer"}
-                  </span>
+                  <span className="summary-value">Credit Card</span>
                 </div>
               </div>
-              
               <div className="confirmation-price">
                 <div className="price-row">
                   <span>Rental Cost</span>
-                  <span>${bookingData.totalCost - bookingData.serviceFee}</span>
+                  <span>${rentalCost}</span>
                 </div>
                 <div className="price-row">
                   <span>Service Fee</span>
-                  <span>${bookingData.serviceFee}</span>
+                  <span>${serviceFee}</span>
                 </div>
                 <div className="price-row total">
                   <span>Total Paid</span>
-                  <span>${bookingData.totalCost}</span>
+                  <span>${totalCost}</span>
                 </div>
               </div>
             </div>
           </div>
-          
           <div className="confirmation-actions">
             <button className="print-button" onClick={handlePrint}>
               <i className="fas fa-print"></i> Print Receipt
@@ -275,9 +202,8 @@ const BookingConfirmation = () => {
               Return to Home
             </button>
           </div>
-          
           <div className="confirmation-footer">
-            <p>A confirmation email has been sent to {bookingData.contactDetails.email}</p>
+            <p>A confirmation email has been sent to {contact.email}</p>
             <p>For any queries, please contact our support team.</p>
           </div>
         </div>

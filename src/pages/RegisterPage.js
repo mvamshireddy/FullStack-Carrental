@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
-import "./RegisterPage.css"; 
+import "./RegisterPage.css";
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 
@@ -29,11 +29,12 @@ const RegisterPage = () => {
         email: form.email,
         password: form.password
       });
-      const { token } = loginRes.data;
+      const { token, user } = loginRes.data;
       localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
 
       setSuccessMsg("Registration successful! Redirecting...");
-      setTimeout(() => navigate("/"), 1000); // Redirect to home
+      setTimeout(() => navigate("/"), 1000);
     } catch (error) {
       setErrorMsg(
         error.response?.data?.message
