@@ -14,6 +14,7 @@ const BookingConfirmation = () => {
   const [error, setError] = useState(null);
   const [booking, setBooking] = useState(null);
 
+
   useEffect(() => {
     const fetchBooking = async () => {
       try {
