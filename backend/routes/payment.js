@@ -3,7 +3,7 @@ const router = express.Router();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const auth = require('../middleware/auth');
 
-// POST /api/payments/create-intent
+// POST /api/payments/create-intent (auth required)
 router.post('/create-intent', auth, async (req, res) => {
   try {
     const { amount, currency = "usd" } = req.body;
