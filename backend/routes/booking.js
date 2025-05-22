@@ -5,10 +5,11 @@ const auth = require('../middleware/auth');
 const { v4: uuidv4 } = require('uuid');
 
 const bookingController = require('../controllers/bookingController');
-// POST /api/bookings (already exists)
+
+// POST /api/bookings (controller version)
 router.post('/', auth, bookingController.createBooking);
 
-// GET /api/bookings/:referenceId  <-- add this!
+// GET /api/bookings/:referenceId
 router.get('/:referenceId', bookingController.getBookingByReferenceId);
 
 // Helper: Check for overlapping bookings (car unavailable)
@@ -23,14 +24,14 @@ async function isCarAvailable(carId, startTime, endTime) {
   return !overlap;
 }
 
-// POST /api/bookings (auth required)
-router.post('/', auth, async (req, res) => {
+// DIRECT POST /api/bookings (auth required) -- preserves contactDetails!
+router.post('/direct', auth, async (req, res) => {
   try {
-    const userId = req.user.userId; // from auth middleware
+    const userId = req.user.userId;
 
     let {
       car, carType, carDetails, startTime, endTime,
-      pickupLocation, dropoffLocation, referenceId, status, paymentIntentId
+      pickupLocation, dropoffLocation, referenceId, status, paymentIntentId, contactDetails
     } = req.body;
 
     // Validation: required fields
@@ -70,7 +71,8 @@ router.post('/', auth, async (req, res) => {
       dropoffLocation,
       referenceId,
       status: status || 'active',
-      paymentIntentId
+      paymentIntentId,
+      contactDetails // <-- Store contact details!
     });
 
     await booking.save();

@@ -20,6 +20,12 @@ const bookingSchema = new mongoose.Schema({
   referenceId: { type: String, required: true, unique: true },
   status: { type: String, enum: ['active', 'cancelled', 'completed'], default: 'active' },
   paymentIntentId: { type: String },
+  contactDetails: { // <-- add this block
+    fullName: String,
+    email: String,
+    phoneNumber: String,
+    specialRequests: String
+  }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Booking', bookingSchema);

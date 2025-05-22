@@ -3,19 +3,17 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import CarCard from "../components/CarCard";
-import axios from "axios";
-import "./BookNow.css";
-import { createBooking } from "../services/booking";
 import { Elements, useStripe, useElements, CardElement } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import api from "../services/axios";
+import { createBooking } from "../services/booking";
+import "./BookNow.css";
 
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUB_KEY);
 
 const SERVICE_FEE = 25;
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 
-// Static vehicles
+// Static vehicles (as before)
 const staticVehicles = [
   {
     id: 1,
@@ -103,51 +101,13 @@ const CARD_ELEMENT_OPTIONS = {
 const BookNow = () => {
   const navigate = useNavigate();
   const [backendVehicles, setBackendVehicles] = useState([]);
-  const [activeTab, setActiveTab] = useState("vehicle");
   const [allVehicles, setAllVehicles] = useState([]);
+  const [activeTab, setActiveTab] = useState("vehicle");
   const [selectedCar, setSelectedCar] = useState(null);
   const [isBookingConfirmed, setIsBookingConfirmed] = useState(false);
   const [bookingRef, setBookingRef] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingError, setBookingError] = useState("");
-  const token = localStorage.getItem("token");
-
-  // Auth check
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      navigate("/login?redirect=/booknow");
-    }
-  }, [navigate]);
-
-  // Fetch backend vehicles
-  useEffect(() => {
-    axios.get(`${API_URL}/cars`)
-      .then(res => setBackendVehicles(res.data || []))
-      .catch(() => setBackendVehicles([]));
-  }, []);
-
-  // Merge static and backend cars, avoid duplicates by name
-  useEffect(() => {
-    const merged = [
-      ...staticVehicles,
-      ...backendVehicles.filter(
-        (bcar) => !staticVehicles.some((scar) => scar.name === bcar.name)
-      ),
-    ];
-    setAllVehicles(merged);
-  }, [backendVehicles]);
-
-  useEffect(() => {
-    const storedCar = localStorage.getItem("selectedCar");
-    if (storedCar) {
-      setSelectedCar(JSON.parse(storedCar));
-      setActiveTab("details");
-      localStorage.removeItem("selectedCar");
-    }
-  }, []);
-
-  // Booking details and contact
   const [bookingDetails, setBookingDetails] = useState({
     pickupStartDate: "",
     pickupStartTime: "",
@@ -162,14 +122,46 @@ const BookNow = () => {
     phoneNumber: "",
     specialRequests: "",
   });
-  const [errors, setErrors] = useState({
-    email: "",
-    phoneNumber: "",
-  });
+  const [errors, setErrors] = useState({ email: "", phoneNumber: "" });
 
-  // Tabs, Car, and Form handlers
+  // Auth check: redirect if not logged in
+  useEffect(() => {
+    if (!localStorage.getItem("token")) {
+      navigate("/login?redirect=/booknow");
+    }
+  }, [navigate]);
+
+  // Fetch backend vehicles (with JWT via api)
+  useEffect(() => {
+    api.get("/cars")
+      .then(res => setBackendVehicles(res.data || []))
+      .catch(() => setBackendVehicles([]));
+  }, []);
+
+  // Merge vehicles, avoid duplicates by name
+  useEffect(() => {
+    setAllVehicles([
+      ...staticVehicles,
+      ...backendVehicles.filter(
+        (bcar) => !staticVehicles.some((scar) => scar.name === bcar.name)
+      ),
+    ]);
+  }, [backendVehicles]);
+
+  // Preselect car if coming from another page
+  useEffect(() => {
+    const storedCar = localStorage.getItem("selectedCar");
+    if (storedCar) {
+      setSelectedCar(JSON.parse(storedCar));
+      setActiveTab("details");
+      localStorage.removeItem("selectedCar");
+    }
+  }, []);
+
+  // Tab, car, and form handlers
   const handleTabClick = (tab) => setActiveTab(tab);
   const handleCarSelection = (car) => setSelectedCar(car);
+
   const handleBookingDetailsChange = (field, value) => {
     setBookingDetails((prev) => ({ ...prev, [field]: value }));
   };
@@ -185,7 +177,7 @@ const BookNow = () => {
     }
   };
 
-  // Pricing helpers
+  // Price helpers
   const calculateDurationInHours = () => {
     if (!bookingDetails.pickupStartDate || !bookingDetails.dropoffEndDate) return 0;
     const start = new Date(`${bookingDetails.pickupStartDate}T${bookingDetails.pickupStartTime}`);
@@ -199,7 +191,7 @@ const BookNow = () => {
   };
   const calculateTotalCost = () => calculateRentalCost() + SERVICE_FEE;
 
-  // Form completeness checks
+  // Check if form tabs are complete
   const isDetailsPageComplete = () => (
     bookingDetails.pickupStartDate &&
     bookingDetails.pickupStartTime &&
@@ -244,7 +236,7 @@ const BookNow = () => {
         }
       } catch (err) {
         setLoading(false);
-        onError(err.message);
+        onError(err.response?.data?.message || err.message || "Payment failed");
       }
     };
 
@@ -261,7 +253,7 @@ const BookNow = () => {
     );
   }
 
-  // Booking confirmation handler (calls backend only after payment)
+  // Booking confirmation handler (calls backend after payment)
   const handleBookingAfterPayment = async (paymentIntentId) => {
     setIsSubmitting(true);
     setBookingError("");
@@ -277,31 +269,25 @@ const BookNow = () => {
         `${bookingDetails.dropoffEndDate}T${bookingDetails.dropoffEndTime}`
       ).toISOString();
 
-      let carId = null;
-      let carType = null;
-      let carDetails = null;
-
+      let carType, carId, carDetails;
       if (selectedCar && selectedCar._id) {
-        carId = selectedCar._id;
         carType = "backend";
+        carId = selectedCar._id;
       } else if (selectedCar && selectedCar.id) {
         carType = "static";
         carDetails = selectedCar;
       }
 
       if ((!carId && carType !== "static") || (carType === "static" && !carDetails)) {
-        setBookingError(
-          "Selected car is not available for booking. Please select a different vehicle."
-        );
+        setBookingError("Selected car is not available for booking. Please select a different vehicle.");
         setIsSubmitting(false);
         return;
       }
 
+      // Only send required fields
       const bookingData = {
         referenceId: ref,
-        car: carId,
         carType,
-        carDetails,
         startTime,
         endTime,
         pickupLocation: bookingDetails.pickupLocation,
@@ -309,6 +295,8 @@ const BookNow = () => {
         status: "active",
         paymentIntentId,
         contactDetails,
+        ...(carType === "backend" ? { car: carId } : {}),
+        ...(carType === "static" ? { carDetails } : {}),
       };
 
       await createBooking(bookingData);

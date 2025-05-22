@@ -18,15 +18,15 @@ const CarCard = ({ car, isSelected, onSelect, hideBookNowButton }) => {
     e.target.src = "/assests/images/default-car.jpg"; // Fallback image
   };
 
-  // Function to handle "Book Now" button click
+  // Handles Book Now with login redirect if not logged in
   const handleBookNowClick = (e) => {
     e.stopPropagation(); // Prevent card click/select if present
     const token = localStorage.getItem("token");
+    localStorage.setItem("selectedCar", JSON.stringify(car));
     if (!token) {
-      // Redirect to login with redirect back to booknow
+      // Redirect to login with redirect back to booknow and preselect this car
       window.location.href = "/login?redirect=/booknow";
     } else {
-      localStorage.setItem("selectedCar", JSON.stringify(car));
       window.location.href = "/booknow";
     }
   };

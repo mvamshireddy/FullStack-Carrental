@@ -14,7 +14,6 @@ const BookingConfirmation = () => {
   const [error, setError] = useState(null);
   const [booking, setBooking] = useState(null);
 
-
   useEffect(() => {
     const fetchBooking = async () => {
       try {
@@ -34,7 +33,7 @@ const BookingConfirmation = () => {
 
   // Format date nicely
   const formatDate = (dateString) => {
-    if (!dateString) return "";
+    if (!dateString) return "-";
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   };
@@ -96,7 +95,8 @@ const BookingConfirmation = () => {
 
   // Use car info (backend or static)
   const car = booking.car || booking.staticCar || {};
-  const contact = booking.contactDetails || {};
+  // Robust contact extraction
+  const contact = booking.contactDetails || booking.contact_details || {};
   const duration = calculateDurationInHours(booking.startTime, booking.endTime);
 
   // Calculate price if needed
@@ -120,7 +120,7 @@ const BookingConfirmation = () => {
           <div className="confirmation-details">
             <div className="confirmation-ref">
               <h3>Booking Reference</h3>
-              <p className="ref-number">{booking.referenceId}</p>
+              <p className="ref-number">{booking.referenceId || "-"}</p>
             </div>
             
             <div className="confirmation-summary">
@@ -133,8 +133,8 @@ const BookingConfirmation = () => {
                   onError={e => e.target.src = "/assets/images/default-car.jpg"}
                 />
                 <div className="summary-car-info">
-                  <h4 className="summary-car-name">{car.name}</h4>
-                  <p className="summary-car-category">{car.category}</p>
+                  <h4 className="summary-car-name">{car.name || "-"}</h4>
+                  <p className="summary-car-category">{car.category || "-"}</p>
                 </div>
               </div>
               <div className="summary-grid">
@@ -144,15 +144,15 @@ const BookingConfirmation = () => {
                 </div>
                 <div className="summary-item">
                   <span className="summary-label">Customer</span>
-                  <span className="summary-value">{contact.fullName}</span>
+                  <span className="summary-value">{contact.fullName || "-"}</span>
                 </div>
                 <div className="summary-item">
                   <span className="summary-label">Email</span>
-                  <span className="summary-value">{contact.email}</span>
+                  <span className="summary-value">{contact.email || "-"}</span>
                 </div>
                 <div className="summary-item">
                   <span className="summary-label">Phone</span>
-                  <span className="summary-value">{contact.phoneNumber}</span>
+                  <span className="summary-value">{contact.phoneNumber || "-"}</span>
                 </div>
                 <div className="summary-item">
                   <span className="summary-label">Pickup Date</span>
@@ -160,15 +160,15 @@ const BookingConfirmation = () => {
                 </div>
                 <div className="summary-item">
                   <span className="summary-label">Pickup Time</span>
-                  <span className="summary-value">{new Date(booking.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  <span className="summary-value">{booking.startTime ? new Date(booking.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "-"}</span>
                 </div>
                 <div className="summary-item">
                   <span className="summary-label">Pickup Location</span>
-                  <span className="summary-value">{booking.pickupLocation}</span>
+                  <span className="summary-value">{booking.pickupLocation || "-"}</span>
                 </div>
                 <div className="summary-item">
                   <span className="summary-label">Dropoff Location</span>
-                  <span className="summary-value">{booking.dropoffLocation}</span>
+                  <span className="summary-value">{booking.dropoffLocation || "-"}</span>
                 </div>
                 <div className="summary-item">
                   <span className="summary-label">Duration</span>
@@ -204,7 +204,7 @@ const BookingConfirmation = () => {
             </button>
           </div>
           <div className="confirmation-footer">
-            <p>A confirmation email has been sent to {contact.email}</p>
+            <p>A confirmation email has been sent to {contact.email || "-"}</p>
             <p>For any queries, please contact our support team.</p>
           </div>
         </div>
