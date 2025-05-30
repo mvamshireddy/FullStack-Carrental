@@ -3,7 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 
-const MONGO_URI = process.env.MONGODB_URI; // <--- corrected
+const MONGO_URI = process.env.MONGODB_URI; 
 
 const userRoutes = require('./routes/user');
 const carRoutes = require('./routes/car');
