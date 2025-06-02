@@ -1,74 +1,90 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { FaBars, FaTimes, FaUser } from 'react-icons/fa';
-import './Navbar.css';
+import React, { useState, useRef, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { FaUser, FaCalendarAlt, FaCog, FaSignOutAlt } from "react-icons/fa";
+import "./Navbar.css";
 
-// Util to get user name from token payload (JWT)
-function getUserNameFromToken() {
+const getUserInfo = () => {
   try {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (user) return user;
     const token = localStorage.getItem("token");
-    if (!token) return null;
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(
-      atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')
-    );
-    const payload = JSON.parse(jsonPayload);
-    return payload.name || payload.username || null;
+    if (!token) return {};
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return {
+      name: payload.name || payload.username || "",
+      email: payload.email || "",
+      photoURL: payload.photoURL || "",
+    };
   } catch {
-    return null;
+    return {};
   }
-}
+};
 
 const Navbar = () => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [userName, setUserName] = useState('');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
   const navigate = useNavigate();
+  const isLoggedIn = !!localStorage.getItem("token");
+  const user = getUserInfo();
 
+  // Close dropdown when clicked outside
   useEffect(() => {
-    // Try to get the user name from token or user object in localStorage
-    const token = localStorage.getItem("token");
-    let name = '';
-    if (token) {
-      // If your backend encodes name in JWT, use this:
-      name = getUserNameFromToken();
-      // If you also save the user object, fallback:
-      if (!name) {
-        try {
-          const user = JSON.parse(localStorage.getItem("user"));
-          name = user?.name || '';
-        } catch {}
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
       }
     }
-    setUserName(name);
-  }, []);
+    if (dropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [dropdownOpen]);
 
-  const handleBookNow = () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      navigate("/login?redirect=/booknow");
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setDropdownOpen(false);
+    setMobileMenuOpen(false);
+    navigate("/login");
+  };
+
+  const hiLabel = isLoggedIn && user.name
+    ? `Hi, ${user.name}`
+    : "Hi, Login";
+
+  const handleHiClick = () => {
+    if (isLoggedIn) {
+      setDropdownOpen((v) => !v);
     } else {
-      navigate("/booknow");
+      navigate("/login");
     }
   };
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
+  const renderProfileImage = () => {
+    if (user.photoURL) {
+      return (
+        <img
+          src={user.photoURL}
+          alt="Profile"
+          className="navbar-profile-img"
+        />
+      );
+    }
+    return (
+      <div className="navbar-profile-placeholder">
+        <FaUser />
+      </div>
+    );
   };
 
   return (
     <nav className="navbar">
       <div className="navbar-container">
-        {/* Logo */}
-        <div className="navbar-logo">
-          <Link to="/" className="logo-link">
-            <h1>
-              Shadow <span className="highlight">Drive</span>
-            </h1>
-          </Link>
-        </div>
-
-        {/* Desktop Navigation Links */}
+        <Link to="/" className="navbar-logo">
+          <span className="navbar-logo-blue">Shadow</span>
+          <span className="highlight"> Drive</span>
+        </Link>
         <ul className="navbar-links desktop-links">
           <li><Link to="/" className="nav-link">Home</Link></li>
           <li><Link to="/vehicles" className="nav-link">Our Vehicles</Link></li>
@@ -76,71 +92,93 @@ const Navbar = () => {
           <li><Link to="/about" className="nav-link">About Us</Link></li>
           <li><Link to="/contact" className="nav-link">Contact</Link></li>
         </ul>
-
-        {/* Book Now Button and User Icon for Desktop */}
         <div className="navbar-actions desktop-actions">
-          <button className="btn-book-now" onClick={handleBookNow}>Book Now</button>
-          <Link to={localStorage.getItem("token") ? "/profile" : "/login"}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <FaUser className="user-icon" />
-              {userName && <span className="user-name">{userName}</span>}
-            </span>
-          </Link>
-        </div>
-
-        {/* Hamburger Menu Icon for Mobile */}
-        <div className="mobile-menu-icon" onClick={toggleMobileMenu}>
-          {isMobileMenuOpen ? <FaTimes /> : <FaBars />}
-        </div>
-
-        {/* Mobile Navigation Overlay */}
-        <div className={`navbar-overlay ${isMobileMenuOpen ? 'open' : ''}`}>
-          <ul className="navbar-links">
-            <li>
-              <Link to="/" className="nav-link" onClick={toggleMobileMenu}>
-                Home
-              </Link>
-            </li>
-            <li>
-              <Link to="/vehicles" className="nav-link" onClick={toggleMobileMenu}>
-                Our Vehicles
-              </Link>
-            </li>
-            <li>
-              <Link to="/services" className="nav-link" onClick={toggleMobileMenu}>
-                Services
-              </Link>
-            </li>
-            <li>
-              <Link to="/about" className="nav-link" onClick={toggleMobileMenu}>
-                About Us
-              </Link>
-            </li>
-            <li>
-              <Link to="/contact" className="nav-link" onClick={toggleMobileMenu}>
-                Contact
-              </Link>
-            </li>
-          </ul>
-
-          {/* Book Now Button */}
-          <button className="btn-book-now" onClick={() => {toggleMobileMenu(); handleBookNow();}}>
-            Book Now
-          </button>
-
-          {/* Sign In / Register or Profile Link */}
-          <div className="navbar-signin">
-            {localStorage.getItem("token") ? (
-              <Link to="/profile" onClick={toggleMobileMenu}>
-                <FaUser /> {userName && <span className="user-name">{userName}</span>}
-              </Link>
-            ) : (
-              <Link to="/login" onClick={toggleMobileMenu}>
-                Sign In / Register
-              </Link>
+          <div
+            className="profile-dropdown-container"
+            ref={dropdownRef}
+          >
+            <div
+              onClick={handleHiClick}
+              className="navbar-profile-trigger"
+              title={isLoggedIn && user.name ? user.name : "Login"}
+            >
+              {renderProfileImage()}
+              <span className="navbar-hi-label">
+                {hiLabel}
+              </span>
+            </div>
+            {isLoggedIn && dropdownOpen && (
+              <div className="profile-dropdown-menu">
+                <div className="profile-dropdown-header">
+                  {renderProfileImage()}
+                  <div>
+                    <div className="profile-dropdown-name">{user.name}</div>
+                    {user.email && <div className="profile-dropdown-email">{user.email}</div>}
+                  </div>
+                </div>
+                <Link
+                  to="/bookings"
+                  className="dropdown-link"
+                  onClick={() => setDropdownOpen(false)}
+                >
+                  <FaCalendarAlt className="dropdown-icon" />
+                  My Bookings
+                </Link>
+                <Link
+                  to="/settings"
+                  className="dropdown-link"
+                  onClick={() => setDropdownOpen(false)}
+                >
+                  <FaCog className="dropdown-icon" />
+                  Settings
+                </Link>
+                <button
+                  className="logout-button"
+                  onClick={handleLogout}
+                >
+                  <FaSignOutAlt className="dropdown-icon" />
+                  Logout
+                </button>
+              </div>
             )}
           </div>
         </div>
+        <div className="mobile-menu-icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+          &#9776;
+        </div>
+      </div>
+      <div className={`navbar-overlay${mobileMenuOpen ? " open" : ""}`} onClick={() => setMobileMenuOpen(false)}>
+        <ul className="navbar-links">
+          <li><Link to="/" className="nav-link" onClick={() => setMobileMenuOpen(false)}>Home</Link></li>
+          <li><Link to="/vehicles" className="nav-link" onClick={() => setMobileMenuOpen(false)}>Our Vehicles</Link></li>
+          <li><Link to="/services" className="nav-link" onClick={() => setMobileMenuOpen(false)}>Services</Link></li>
+          <li><Link to="/about" className="nav-link" onClick={() => setMobileMenuOpen(false)}>About Us</Link></li>
+          <li><Link to="/contact" className="nav-link" onClick={() => setMobileMenuOpen(false)}>Contact</Link></li>
+          {isLoggedIn ? (
+            <>
+              <li>
+                <Link to="/bookings" className="nav-link" onClick={() => setMobileMenuOpen(false)}>My Bookings</Link>
+              </li>
+              <li>
+                <Link to="/settings" className="nav-link" onClick={() => setMobileMenuOpen(false)}>Settings</Link>
+              </li>
+              <li>
+                <button className="logout-button" onClick={handleLogout}>
+                  Logout
+                </button>
+              </li>
+            </>
+          ) : (
+            <li>
+              <span
+                onClick={() => { setMobileMenuOpen(false); navigate("/login"); }}
+                className="navbar-hi-label navbar-hi-label-mobile"
+              >
+                Hi, Login
+              </span>
+            </li>
+          )}
+        </ul>
       </div>
     </nav>
   );

@@ -12,6 +12,8 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import MyBookings from './pages/MyBookings';
+
 
 function App() {
   return (
@@ -25,6 +27,7 @@ function App() {
         <Route path="/contact" element={<Contact />} />
         <Route path="/booknow" element={<BookNow />} />
         <Route path="/confirmation/:bookingRef" element={<BookingConfirmation />} />
+        <Route path="/bookings" element={<MyBookings />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/profile" element={<ProfilePage />} />

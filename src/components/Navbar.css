@@ -1,138 +1,239 @@
-/* Navbar General Styling */
 .navbar {
-  background-color: rgba(15, 23, 42, 0.8); /* Dark navy with 80% opacity */
-  padding: 3px 15px; /* Reduced padding for smaller height */
-  color: white; /* White text */
+  background-color: rgba(15, 23, 42, 0.8);
+  padding: 20px 15px;
+  color: white;
   position: fixed;
   top: 0;
   width: 100%;
   z-index: 1000;
-  backdrop-filter: blur(10px); /* Adds a blur effect */
+  backdrop-filter: blur(10px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .navbar-container {
   display: flex;
-  justify-content: space-between; /* Logo to the left, links & actions to the right */
+  justify-content: space-between;
   align-items: center;
   max-width: 1200px;
   margin: 0 auto;
 }
 
-/* Logo */
 .navbar-logo {
-  font-size: 1.1rem; /* Reduced font size for responsive adjustments */
+  font-size: 1.2rem;
   font-weight: bold;
-  color: #facc15; /* Yellow for logo */
-  margin-right: 10px; /* Add spacing between logo and links */
-  flex-shrink: 1; /* Allow the logo to shrink responsively */
-  white-space: nowrap; /* Prevent text wrapping */
+  color: #facc15;
+  margin-right: 10px;
+  flex-shrink: 1;
+  white-space: nowrap;
 }
 
 .navbar-logo .highlight {
   color: white;
 }
 
-/* Desktop Navigation Links */
-.navbar-links.desktop-links {
-  list-style: none;
-  display: flex; /* Ensure links are displayed in a row */
-  flex-direction: row; /* Horizontal alignment */
-  gap: 15px; /* Reduced spacing between links */
-  margin: 0;
-  padding: 0;
-  flex-grow: 1; /* Allow links to take up available space */
-  justify-content: center; /* Center links between logo and actions */
+.navbar-logo-blue {
+  color: #3b82f6;
 }
 
-/* Links Styles */
+.navbar-links.desktop-links {
+  list-style: none;
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  margin: 0;
+  padding: 0;
+  flex-grow: 1;
+  justify-content: center;
+}
+
 .navbar-links .nav-link {
   color: white;
   text-decoration: none;
-  font-size: 0.9rem; /* Reduced link font size */
+  font-size: 1rem;
   transition: color 0.3s ease;
 }
 
 .navbar-links .nav-link:hover {
-  color: #facc15; /* Yellow on hover */
+  color: #facc15;
 }
 
-/* Desktop Actions (Book Now & User Icon) */
 .navbar-actions.desktop-actions {
   display: flex;
   align-items: center;
-  gap: 10px; /* Reduced spacing between actions */
-  flex-shrink: 0; /* Prevent actions from shrinking */
+  gap: 10px;
+  flex-shrink: 0;
 }
 
-/* Book Now Button */
-.btn-book-now {
-  background-color: #facc15; /* Yellow background */
-  color: #0f172a; /* Dark navy text */
-  border: none;
-  padding: 6px 12px; /* Reduced button size */
-  font-size: 0.8rem; /* Reduced button font size */
+/* Profile image and trigger */
+.navbar-profile-img {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #e5e7eb;
+  background: #f3f4f6;
+}
+
+.navbar-profile-placeholder {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #e5e7eb;
+  font-size: 20px;
+  color: #94a3b8;
+}
+
+.navbar-profile-trigger {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+}
+
+.navbar-hi-label {
+  margin-left: 10px;
+  color: #3b82f6;
   font-weight: bold;
-  border-radius: 5px;
+  font-size: 1rem;
   cursor: pointer;
-  transition: background-color 0.3s ease;
 }
 
-.btn-book-now:hover {
-  background-color: #eab308; /* Darker yellow */
+.navbar-hi-label-mobile {
+  display: inline-block;
+  margin-left: 0;
 }
 
-/* User Icon */
-.user-icon {
-  font-size: 1rem; /* Reduced icon size */
-  color: white;
+.profile-dropdown-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.profile-dropdown-menu {
+  animation: fadeInDropdown 0.13s;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
+  border-radius: 14px;
+  overflow: hidden;
+  min-width: 240px;
+  background: #fff;
+  position: absolute;
+  top: 110%;
+  right: 0;
+  z-index: 2000;
+  border: 1px solid #e0e7ef;
+  padding: 0;
+}
+
+@keyframes fadeInDropdown {
+  from { opacity: 0; transform: translateY(-8px);}
+  to   { opacity: 1; transform: translateY(0);}
+}
+
+.profile-dropdown-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px 12px 20px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f8fafc;
+}
+
+.profile-dropdown-name {
+  font-weight: 700;
+  font-size: 16px;
+  color: #22223b;
+}
+
+.profile-dropdown-email {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.dropdown-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 20px;
+  color: #22223b;
+  text-decoration: none;
+  font-size: 15px;
+  border-bottom: 1px solid #e5e7eb;
+  transition: background 0.2s, color 0.2s;
+}
+
+.dropdown-link:hover {
+  background: #f3f4f6;
+  color: #3b82f6;
+}
+
+.dropdown-icon {
+  color: #3b82f6;
+}
+
+.logout-button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  border: none;
+  background: none;
+  color: #f44336;
+  padding: 13px 20px;
+  text-align: left;
   cursor: pointer;
-  transition: color 0.3s ease;
+  font-weight: 500;
+  font-size: 15px;
+  border-bottom: none;
+  transition: background 0.2s, color 0.2s;
 }
 
-.user-icon:hover {
-  color: #facc15; /* Yellow on hover */
+.logout-button:hover {
+  background: #ffeaea;
+  color: #c62828;
 }
 
 /* Mobile Menu Icon */
 .mobile-menu-icon {
-  display: none; /* Hidden by default */
-  font-size: 1.3rem; /* Slightly reduced icon size */
+  display: none;
+  font-size: 1.3rem;
   cursor: pointer;
   color: white;
-  z-index: 1500; /* Ensure it stays on top when menu is open */
+  z-index: 1500;
 }
 
 /* Mobile Navigation Overlay */
 .navbar-overlay {
-  display: none; /* Hidden by default */
+  display: none;
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100vh;
-  background-color: rgba(15, 23, 42, 0.9); /* Dark background */
+  background-color: rgba(15, 23, 42, 0.9);
   color: white;
-  z-index: 1400; /* Below the hamburger icon but above other content */
+  z-index: 1400;
   flex-direction: column;
-  justify-content: center; /* Center contents vertically */
-  align-items: center; /* Center contents horizontally */
+  justify-content: center;
+  align-items: center;
   gap: 20px;
-  opacity: 0; /* Invisible by default */
+  opacity: 0;
   transition: opacity 0.3s ease;
 }
 
 .navbar-overlay.open {
-  display: flex; /* Show when open */
-  opacity: 1; /* Fully visible */
+  display: flex;
+  opacity: 1;
 }
 
-/* Mobile Links (Inside Overlay) */
 .navbar-links {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 15px; /* Reduced spacing between links */
+  gap: 15px;
   margin: 0;
   padding: 0;
 }
@@ -140,53 +241,28 @@
 .navbar-links .nav-link {
   color: white;
   text-decoration: none;
-  font-size: 1rem; /* Slightly reduced font size for mobile */
+  font-size: 1rem;
   transition: color 0.3s ease;
 }
 
 .navbar-links .nav-link:hover {
-  color: #facc15; /* Yellow on hover */
+  color: #facc15;
 }
 
-/* Sign In / Register Link */
-.navbar-signin {
-  margin-top: 10px; /* Slightly reduced spacing below the button */
-}
-
-.navbar-signin a {
-  color: white;
-  text-decoration: none;
-  font-size: 0.8rem; /* Reduced font size */
-  transition: color 0.3s ease;
-}
-
-.navbar-signin a:hover {
-  color: #facc15; /* Yellow on hover */
-}
-
-/* Responsive Design */
 @media (max-width: 768px) {
-  /* Mobile Menu Icon Visibility */
   .mobile-menu-icon {
-    display: block; /* Display hamburger menu icon */
+    display: block;
   }
-
-  /* Hide Desktop Links */
   .navbar-links.desktop-links {
-    display: none; /* Hide desktop links for mobile */
+    display: none;
   }
-
-  /* Hide Desktop Actions */
   .navbar-actions.desktop-actions {
     display: none;
   }
-
-  /* Mobile Logo and Button Alignment */
   .navbar-container {
-    justify-content: space-between; /* Ensure logo and menu icon are aligned */
+    justify-content: space-between;
   }
-
   .navbar-logo {
-    margin-right: 10px; /* Reduce gap between logo and menu icon */
+    margin-right: 10px;
   }
 }

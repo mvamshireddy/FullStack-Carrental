@@ -27,22 +27,27 @@ const ProfilePage = () => {
       });
   }, [navigate]);
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/login");
+  };
+
   if (!user) return <div style={{ padding: 32 }}>Loading profile...</div>;
 
   return (
-    <div style={{ maxWidth: 400, margin: "48px auto", background: "#fff", padding: 32, borderRadius: 8, boxShadow: "0 2px 8px #ddd" }}>
-      <h2>User Profile</h2>
-      <div><b>Name:</b> {user.name}</div>
-      <div><b>Email:</b> {user.email}</div>
-      <div><b>Phone:</b> {user.phone || "-"}</div>
-      <button
-        style={{ marginTop: 24 }}
-        onClick={() => {
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
-          navigate("/login");
-        }}
-      >Logout</button>
+    <div className="profile-page">
+      <div className="profile-container">
+        <h2>User Profile</h2>
+        <div className="profile-info">
+          <div><span className="profile-label">Name:</span> {user.name}</div>
+          <div><span className="profile-label">Email:</span> {user.email}</div>
+          <div><span className="profile-label">Phone:</span> {user.phone || "-"}</div>
+        </div>
+        <button className="logout-button" onClick={handleLogout}>
+          Logout
+        </button>
+      </div>
     </div>
   );
 };
