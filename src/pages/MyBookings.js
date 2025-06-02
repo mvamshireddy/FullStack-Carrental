@@ -29,11 +29,15 @@ const MyBookings = () => {
   const [error, setError] = useState(null);
 
 useEffect(() => {
+  let firstLoad = true;
+  let isMounted = true;
+
   const fetchData = () => {
-    setLoading(true);
+    if (firstLoad) setLoading(true); // Only show loading on first load
     setError(null);
     getBookings()
       .then(res => {
+        if (!isMounted) return;
         const data = (res.data.bookings || res.data || []).map(b => ({
           ...b,
           city: b.pickupLocation || b.city || "",
@@ -52,12 +56,21 @@ useEffect(() => {
         }));
         setBookings(data);
       })
-      .catch(() => setError("Could not fetch bookings"))
-      .finally(() => setLoading(false));
+      .catch(() => {
+        if (isMounted) setError("Could not fetch bookings");
+      })
+      .finally(() => {
+        if (firstLoad) setLoading(false);
+        firstLoad = false;
+      });
   };
+
   fetchData();
   const interval = setInterval(fetchData, 20000); // 20 seconds
-  return () => clearInterval(interval);
+  return () => {
+    isMounted = false;
+    clearInterval(interval);
+  };
 }, []);
 
 
