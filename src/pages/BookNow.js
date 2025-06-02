@@ -13,7 +13,7 @@ const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUB_KEY);
 
 const SERVICE_FEE = 25;
 
-// Static vehicles (as before)
+// Static vehicles
 const staticVehicles = [
   {
     id: 1,
@@ -131,7 +131,24 @@ const BookNow = () => {
     }
   }, [navigate]);
 
-  // Fetch backend vehicles (with JWT via api)
+  // Prefill from Book Again
+  useEffect(() => {
+    const bookAgainDataRaw = localStorage.getItem("bookAgainData");
+    if (bookAgainDataRaw) {
+      const bookAgainData = JSON.parse(bookAgainDataRaw);
+      if (bookAgainData.car) setSelectedCar(bookAgainData.car);
+      setBookingDetails(prev => ({
+        ...prev,
+        pickupLocation: bookAgainData.pickupLocation || "",
+        dropoffLocation: bookAgainData.dropoffLocation || "",
+      }));
+      if (bookAgainData.contactDetails) setContactDetails(bookAgainData.contactDetails);
+      if (bookAgainData.skipToPayment) setActiveTab("payment");
+      localStorage.removeItem("bookAgainData");
+    }
+  }, []);
+
+  // Fetch backend vehicles
   useEffect(() => {
     api.get("/cars")
       .then(res => setBackendVehicles(res.data || []))

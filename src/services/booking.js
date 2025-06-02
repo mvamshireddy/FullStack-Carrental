@@ -9,3 +9,8 @@ export function getBookings() {
 export function createBooking(bookingData) {
   return api.post('/bookings', bookingData);
 }
+
+export const cancelBooking = (bookingId) => {
+  // Adjust endpoint/method as per your backend
+  return api.patch(`/bookings/${bookingId}/cancel`);
+};

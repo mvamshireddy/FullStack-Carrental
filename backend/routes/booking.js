@@ -21,6 +21,30 @@ router.get('/', auth, async (req, res) => {
 // POST /api/bookings (controller version)
 router.post('/', auth, bookingController.createBooking);
 
+
+// PATCH /api/bookings/:id/cancel -- cancel a booking (set status to 'cancelled')
+router.patch('/:id/cancel', auth, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const bookingId = req.params.id;
+
+    // Find the booking by id and user (to avoid unauthorized cancels)
+    const booking = await Booking.findOne({ _id: bookingId, user: userId });
+    if (!booking) return res.status(404).json({ message: "Booking not found" });
+
+    if (booking.status === "cancelled") {
+      return res.status(400).json({ message: "Booking is already cancelled." });
+    }
+
+    booking.status = "cancelled";
+    await booking.save();
+
+    res.json({ message: "Booking cancelled", booking });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
 // GET /api/bookings/:referenceId
 router.get('/:referenceId', bookingController.getBookingByReferenceId);
 
