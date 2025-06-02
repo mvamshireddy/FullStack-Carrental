@@ -28,15 +28,14 @@ const MyBookings = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
+useEffect(() => {
+  const fetchData = () => {
     setLoading(true);
     setError(null);
     getBookings()
       .then(res => {
-        // Map backend status to UI tab names
         const data = (res.data.bookings || res.data || []).map(b => ({
           ...b,
-          // Fallback display values if missing
           city: b.pickupLocation || b.city || "",
           address: b.dropoffLocation || b.address || "",
           vehicle: b.car?.name || b.staticCar?.name || b.vehicle || "",
@@ -55,7 +54,12 @@ const MyBookings = () => {
       })
       .catch(() => setError("Could not fetch bookings"))
       .finally(() => setLoading(false));
-  }, []);
+  };
+  fetchData();
+  const interval = setInterval(fetchData, 20000); // 20 seconds
+  return () => clearInterval(interval);
+}, []);
+
 
   const filtered = bookings.filter(b => b.status === activeTab);
 

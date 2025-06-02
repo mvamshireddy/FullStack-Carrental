@@ -3,8 +3,20 @@ const router = express.Router();
 const Booking = require('../models/Booking');
 const auth = require('../middleware/auth');
 const { v4: uuidv4 } = require('uuid');
-
 const bookingController = require('../controllers/bookingController');
+
+// GET /api/bookings (all bookings for current user)
+router.get('/', auth, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const bookings = await Booking.find({ user: userId })
+      .populate('car') // Populate car details if needed
+      .sort({ startTime: -1 });
+    res.json({ bookings });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+});
 
 // POST /api/bookings (controller version)
 router.post('/', auth, bookingController.createBooking);
@@ -24,7 +36,7 @@ async function isCarAvailable(carId, startTime, endTime) {
   return !overlap;
 }
 
-// DIRECT POST /api/bookings (auth required) -- preserves contactDetails!
+// DIRECT POST /api/bookings/direct (auth required) -- preserves contactDetails!
 router.post('/direct', auth, async (req, res) => {
   try {
     const userId = req.user.userId;
