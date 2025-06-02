@@ -1,39 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { getBookings } from "../services/booking";
 import "./MyBookings.css";
 
-// Dummy bookings for UI (replace with API in real usage)
-const bookings = [
-  {
-    id: 1,
-    city: "Manchester",
-    address: "123 Powerline Ave, Spark City",
-    vehicle: "Electra spot station",
-    date: "Jun 6, 2025",
-    time: "10:00 AM",
-    charger: "Type 2",
-    duration: "1.5 hours",
-    status: "Canceled",
-    canBookAgain: true,
-    canSeeDetails: true,
-  },
-  {
-    id: 2,
-    city: "Manchester",
-    address: "123 Powerline Ave, Spark City",
-    vehicle: "Electra spot station",
-    date: "Jun 6, 2025",
-    time: "10:00 AM",
-    charger: "Type 2",
-    duration: "1.5 hours",
-    status: "Canceled",
-    canBookAgain: true,
-    canSeeDetails: true,
-  },
-  // ... More bookings
-];
-
-// Tab names
 const TABS = ["Upcoming", "Completed", "Canceled"];
+
+const STATUS_MAP = {
+  active: "Upcoming",
+  completed: "Completed",
+  cancelled: "Canceled",
+};
 
 const EmptyIcon = () => (
   <div className="mybookings-empty">
@@ -48,10 +23,44 @@ const EmptyIcon = () => (
 );
 
 const MyBookings = () => {
-  const [activeTab, setActiveTab] = useState("Canceled");
+  const [bookings, setBookings] = useState([]);
+  const [activeTab, setActiveTab] = useState("Upcoming");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Filtered bookings by active tab
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+    getBookings()
+      .then(res => {
+        // Map backend status to UI tab names
+        const data = (res.data.bookings || res.data || []).map(b => ({
+          ...b,
+          // Fallback display values if missing
+          city: b.pickupLocation || b.city || "",
+          address: b.dropoffLocation || b.address || "",
+          vehicle: b.car?.name || b.staticCar?.name || b.vehicle || "",
+          date: b.startTime ? new Date(b.startTime).toLocaleDateString() : b.date || "",
+          time: b.startTime ? new Date(b.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : b.time || "",
+          charger: b.charger || "",
+          duration: b.startTime && b.endTime
+            ? `${Math.ceil((new Date(b.endTime) - new Date(b.startTime)) / (60 * 60 * 1000))} hours`
+            : b.duration || "",
+          status: STATUS_MAP[b.status] || b.status,
+          canBookAgain: true,
+          canSeeDetails: true,
+          id: b._id || b.id,
+        }));
+        setBookings(data);
+      })
+      .catch(() => setError("Could not fetch bookings"))
+      .finally(() => setLoading(false));
+  }, []);
+
   const filtered = bookings.filter(b => b.status === activeTab);
+
+  if (loading) return <div className="mybookings-root"><div className="mybookings-content"><div>Loading...</div></div></div>;
+  if (error) return <div className="mybookings-root"><div className="mybookings-content"><div>{error}</div></div></div>;
 
   return (
     <div className="mybookings-root">
