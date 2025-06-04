@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const { sendWelcomeMail } = require('../utils/mailer');
 
 exports.register = async (req, res) => {
   try {
@@ -10,6 +11,11 @@ exports.register = async (req, res) => {
 
     user = new User({ name, email, password, phone });
     await user.save();
+
+    // Send welcome email (do not block registration if mail fails)
+    sendWelcomeMail(user.email, user.name).catch(e => {
+      console.error('Welcome email failed:', e.message);
+    });
 
     // Do not send password in response
     const { password: pw, ...userData } = user.toObject();
