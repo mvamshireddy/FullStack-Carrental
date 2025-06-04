@@ -1,6 +1,7 @@
 const User = require('../models/User');
+require('dotenv').config();
 const jwt = require('jsonwebtoken');
-const { sendWelcomeMail } = require('../utils/mailer');
+const { sendWelcomeMail, sendLoginMail } = require('../utils/mailer');
 
 exports.register = async (req, res) => {
   try {
@@ -12,7 +13,7 @@ exports.register = async (req, res) => {
     user = new User({ name, email, password, phone });
     await user.save();
 
-    // Send welcome email (do not block registration if mail fails)
+    // Send welcome email
     sendWelcomeMail(user.email, user.name).catch(e => {
       console.error('Welcome email failed:', e.message);
     });
@@ -37,6 +38,11 @@ exports.login = async (req, res) => {
 
     const payload = { userId: user._id, isAdmin: user.isAdmin };
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
+
+    // Send login email
+    sendLoginMail(user.email, user.name).catch(e => {
+      console.error('Login email failed:', e.message);
+    });
 
     res.json({ token, user: { name: user.name, email: user.email, isAdmin: user.isAdmin, _id: user._id } });
   } catch (err) {

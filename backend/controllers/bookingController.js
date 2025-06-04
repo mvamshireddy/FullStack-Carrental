@@ -1,5 +1,7 @@
 const Booking = require('../models/Booking');
 const { v4: uuidv4 } = require('uuid');
+require('dotenv').config();
+const { sendBookingConfirmationMail } = require('../utils/mailer');
 
 // Helper: Check for overlapping bookings (backend cars only)
 async function isCarAvailable(carId, startTime, endTime) {
@@ -17,7 +19,6 @@ async function isCarAvailable(carId, startTime, endTime) {
 exports.createBooking = async (req, res) => {
   try {
     const userId = req.user.userId;
-
     let {
       car,
       carType,
@@ -32,7 +33,7 @@ exports.createBooking = async (req, res) => {
       contactDetails
     } = req.body;
 
-    // Required type and details validation
+    // Validation...
     if (!carType) return res.status(400).json({ message: "carType required." });
     if (carType === "backend" && !car)
       return res.status(400).json({ message: "Backend car id required." });
@@ -53,7 +54,6 @@ exports.createBooking = async (req, res) => {
     if (end <= start)
       return res.status(400).json({ message: "End time must be after start time." });
 
-    // Check car availability for backend cars
     if (carType === "backend" && car) {
       const available = await isCarAvailable(car, start, end);
       if (!available) return res.status(409).json({ message: "Car is not available for the selected dates." });
@@ -76,6 +76,14 @@ exports.createBooking = async (req, res) => {
     });
 
     await booking.save();
+
+    // Send confirmation email if email is present
+    if (booking.contactDetails && booking.contactDetails.email) {
+      sendBookingConfirmationMail(booking.contactDetails.email, booking).catch(e => {
+        console.error('Booking confirmation email failed:', e.message);
+      });
+    }
+
     res.status(201).json({ message: 'Booking created', booking });
   } catch (e) {
     res.status(400).json({ message: e.message });
