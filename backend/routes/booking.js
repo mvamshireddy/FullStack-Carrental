@@ -6,12 +6,41 @@ const { v4: uuidv4 } = require('uuid');
 const bookingController = require('../controllers/bookingController');
 
 // GET /api/bookings (all bookings for current user)
+// Also: Marks expired (ended) bookings as "completed" in DB
 router.get('/', auth, async (req, res) => {
   try {
     const userId = req.user.userId;
-    const bookings = await Booking.find({ user: userId })
-      .populate('car') // Populate car details if needed
+    let bookings = await Booking.find({ user: userId })
+      .populate('car')
       .sort({ startTime: -1 });
+
+    // Mark as completed if endTime < now and status not cancelled/completed
+    const now = new Date();
+    const bulkOps = [];
+    bookings.forEach(b => {
+      if (
+        b.status !== "completed" &&
+        b.status !== "cancelled" &&
+        b.endTime &&
+        new Date(b.endTime) < now
+      ) {
+        bulkOps.push({
+          updateOne: {
+            filter: { _id: b._id },
+            update: { $set: { status: "completed" } }
+          }
+        });
+        b.status = "completed"; // update in-memory for this response
+      }
+    });
+    if (bulkOps.length) {
+      await Booking.bulkWrite(bulkOps);
+      // Re-fetch updated bookings to reflect DB state accurately
+      bookings = await Booking.find({ user: userId })
+        .populate('car')
+        .sort({ startTime: -1 });
+    }
+
     res.json({ bookings });
   } catch (e) {
     res.status(500).json({ message: e.message });
@@ -20,7 +49,6 @@ router.get('/', auth, async (req, res) => {
 
 // POST /api/bookings (controller version)
 router.post('/', auth, bookingController.createBooking);
-
 
 // PATCH /api/bookings/:id/cancel -- cancel a booking (set status to 'cancelled')
 router.patch('/:id/cancel', auth, async (req, res) => {

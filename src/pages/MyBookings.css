@@ -198,6 +198,21 @@
   background: #c62828;
   border-color: #c62828;
 }
+.mybookings-refresh-indicator {
+  display: inline-block;
+  margin-left: 12px;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #2563eb;
+  border-top-color: transparent;
+  border-radius: 50%;
+  vertical-align: middle;
+  animation: mybookings-spin 0.7s linear infinite;
+}
+@keyframes mybookings-spin {
+  0% { transform: rotate(0deg);}
+  100% { transform: rotate(360deg);}
+}
 
 /* MOBILE */
 .mybookings-mobile {

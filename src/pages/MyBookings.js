@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { getBookings, cancelBooking } from "../services/booking";
 import "./MyBookings.css";
 
 const TABS = ["Upcoming", "Completed", "Canceled"];
-
 const STATUS_MAP = {
   active: "Upcoming",
   completed: "Completed",
@@ -49,62 +48,67 @@ const getBookingAmount = (booking) => {
 const MyBookings = () => {
   const [bookings, setBookings] = useState([]);
   const [activeTab, setActiveTab] = useState("Upcoming");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // only for initial load
+  const [refreshing, setRefreshing] = useState(false); // for background refreshes
   const [error, setError] = useState(null);
+  const isMounted = useRef(true);
 
   useEffect(() => {
-    let firstLoad = true;
-    let isMounted = true;
+    isMounted.current = true;
 
-    const fetchData = () => {
-      if (firstLoad) setLoading(true);
+    const fetchData = async (isInitial = false) => {
+      if (isInitial) setLoading(true);
+      else setRefreshing(true);
+
       setError(null);
-      getBookings()
-        .then(res => {
-          if (!isMounted) return;
-          const now = new Date();
-          const data = (res.data.bookings || res.data || []).map(b => {
-            const endTime = b.endTime ? new Date(b.endTime) : null;
-            let effectiveStatus = b.status;
-            if (effectiveStatus !== "cancelled" && endTime && now > endTime) {
-              effectiveStatus = "completed";
-            }
-            if (effectiveStatus === "cancelled") effectiveStatus = "cancelled";
-            if (effectiveStatus === "active" || effectiveStatus === "upcoming") effectiveStatus = "active";
-            return {
-              ...b,
-              city: b.pickupLocation || b.city || "",
-              address: b.dropoffLocation || b.address || "",
-              vehicle: b.car?.name || b.staticCar?.name || b.vehicle || "",
-              carImg: getBookingCarImg(b),
-              date: b.startTime ? new Date(b.startTime).toLocaleDateString() : b.date || "",
-              time: b.startTime ? new Date(b.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : b.time || "",
-              amount: getBookingAmount(b),
-              duration: b.startTime && b.endTime
-                ? `${Math.ceil((new Date(b.endTime) - new Date(b.startTime)) / (60 * 60 * 1000))} hours`
-                : b.duration || "",
-              status: STATUS_MAP[effectiveStatus] || effectiveStatus,
-              _status: effectiveStatus,
-              canBookAgain: true,
-              canSeeDetails: true,
-              id: b._id || b.id,
-            };
-          });
-          setBookings(data);
-        })
-        .catch(() => {
-          if (isMounted) setError("Could not fetch bookings");
-        })
-        .finally(() => {
-          if (firstLoad) setLoading(false);
-          firstLoad = false;
+      try {
+        const res = await getBookings();
+        if (!isMounted.current) return;
+        const now = new Date();
+        const data = (res.data.bookings || res.data || []).map(b => {
+          const endTime = b.endTime ? new Date(b.endTime) : null;
+          let effectiveStatus = b.status;
+          if (effectiveStatus !== "cancelled" && endTime && now > endTime) {
+            effectiveStatus = "completed";
+          }
+          if (effectiveStatus === "cancelled") effectiveStatus = "cancelled";
+          if (effectiveStatus === "active" || effectiveStatus === "upcoming") effectiveStatus = "active";
+          return {
+            ...b,
+            city: b.pickupLocation || b.city || "",
+            address: b.dropoffLocation || b.address || "",
+            vehicle: b.car?.name || b.staticCar?.name || b.vehicle || "",
+            carImg: getBookingCarImg(b),
+            date: b.startTime ? new Date(b.startTime).toLocaleDateString() : b.date || "",
+            time: b.startTime ? new Date(b.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : b.time || "",
+            amount: getBookingAmount(b),
+            duration: b.startTime && b.endTime
+              ? `${Math.ceil((new Date(b.endTime) - new Date(b.startTime)) / (60 * 60 * 1000))} hours`
+              : b.duration || "",
+            status: STATUS_MAP[effectiveStatus] || effectiveStatus,
+            _status: effectiveStatus,
+            canBookAgain: true,
+            canSeeDetails: true,
+            id: b._id || b.id,
+          };
         });
+        setBookings(data);
+      } catch (e) {
+        if (isMounted.current) setError("Could not fetch bookings");
+      } finally {
+        if (isInitial) setLoading(false);
+        else setRefreshing(false);
+      }
     };
 
-    fetchData();
-    const interval = setInterval(fetchData, 20000);
+    // Initial load with spinner
+    fetchData(true);
+
+    // Background refresh without spinner
+    const interval = setInterval(() => fetchData(false), 20000);
+
     return () => {
-      isMounted = false;
+      isMounted.current = false;
       clearInterval(interval);
     };
   }, []);
@@ -139,13 +143,20 @@ const MyBookings = () => {
     window.location.href = "/booknow";
   };
 
+  // Only show full page spinner on initial load
   if (loading) return <div className="mybookings-root"><div className="mybookings-content"><div>Loading...</div></div></div>;
   if (error) return <div className="mybookings-root"><div className="mybookings-content"><div>{error}</div></div></div>;
+
+  // Optionally, you can show a tiny spinner in the header or as a faded overlay
+  // if (refreshing) ... (see CSS example below)
 
   return (
     <div className="mybookings-root">
       <div className="mybookings-content">
-        <h1 className="mybookings-title">My Bookings</h1>
+        <h1 className="mybookings-title">
+          My Bookings
+          {refreshing && <span className="mybookings-refresh-indicator" title="Refreshing..." />}
+        </h1>
         <div className="mybookings-tabs">
           {TABS.map(tab => (
             <button
