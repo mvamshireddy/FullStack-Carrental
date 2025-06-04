@@ -1,6 +1,6 @@
+require('dotenv').config();
 const Booking = require('../models/Booking');
 const { v4: uuidv4 } = require('uuid');
-require('dotenv').config();
 const { sendBookingConfirmationMail } = require('../utils/mailer');
 
 // Helper: Check for overlapping bookings (backend cars only)

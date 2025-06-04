@@ -5,7 +5,7 @@ sendWelcomeMail('mvamshireddy9848@gmail.com', 'Test User')
   .then(() => console.log('Welcome mail sent!'))
   .catch(e => console.error('Welcome mail failed:', e));
 
-sendLoginMail('your@email.com', 'Test User')
+sendLoginMail('mvamshireddy9848@gmail.com', 'Test User')
   .then(() => console.log('Login mail sent!'))
   .catch(e => console.error('Login mail failed:', e));
 
@@ -20,6 +20,7 @@ const booking = {
   dropoffLocation: "Hotel",
   contactDetails: { email: "your@email.com", fullName: "Test User", phoneNumber: "1234567890" }
 };
-sendBookingConfirmationMail('your@email.com', booking)
+sendBookingConfirmationMail('mvamshireddy9848@gmail.com', booking)
   .then(() => console.log('Booking mail sent!'))
   .catch(e => console.error('Booking mail failed:', e));
+  
