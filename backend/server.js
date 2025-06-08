@@ -1,10 +1,12 @@
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
-const cors = require('cors');
 const session = require('express-session');
+const MongoStore = require('connect-mongo');
+const cors = require('cors');
 const passport = require('passport');
 require('./config/passport');
+const app = express();
 
 // Import routes
 const userRoutes = require('./routes/user');
@@ -14,17 +16,23 @@ const paymentRoutes = require('./routes/payment');
 const authRoutes = require('./routes/auth');
 
 
-const app = express();
+
 app.use(cors());
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
 
+
 app.use(session({
   secret: process.env.SESSION_SECRET || 'some_secret',
   resave: false,
-  saveUninitialized: true
+  saveUninitialized: true,
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGODB_URI, // use your actual MongoDB URI
+    collectionName: 'sessions'
+  })
 }));
+
 app.use(passport.initialize());
 app.use(passport.session());
 
