@@ -1,6 +1,6 @@
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const User = require('../models/User'); // Adjust path if necessary
+const User = require('../models/User');
 
 passport.use(new GoogleStrategy(
   {
@@ -10,23 +10,17 @@ passport.use(new GoogleStrategy(
   },
   async (accessToken, refreshToken, profile, done) => {
     try {
-      // Extract email safely
       const email =
         profile.emails && profile.emails[0] ? profile.emails[0].value : '';
-
-      // Try to find the user by Google ID
       let user = await User.findOne({ googleId: profile.id });
-
-      // If not found, create a new user
       if (!user) {
         user = await User.create({
           googleId: profile.id,
           email,
           name: profile.displayName,
-          // add more fields if needed
         });
       }
-
+      // No session, just pass user to callback
       return done(null, user);
     } catch (err) {
       return done(err, null);
@@ -34,19 +28,9 @@ passport.use(new GoogleStrategy(
   }
 ));
 
-// Serialize by user ID (best practice)
-passport.serializeUser((user, done) => {
-  done(null, user._id);
-});
-
-// Deserialize gets full user from DB
-passport.deserializeUser(async (id, done) => {
-  try {
-    const user = await User.findById(id);
-    done(null, user);
-  } catch (err) {
-    done(err, null);
-  }
-});
+// DO NOT use serializeUser/deserializeUser for JWT stateless
+// Remove these lines:
+// passport.serializeUser(...)
+// passport.deserializeUser(...)
 
 module.exports = passport;
