@@ -15,32 +15,28 @@ const bookingRoutes = require('./routes/booking');
 const paymentRoutes = require('./routes/payment');
 const authRoutes = require('./routes/auth');
 
-
-
 app.use(cors());
 app.use(express.json());
 
-app.use('/api/auth', authRoutes);
-
-
+// ---- SESSION AND PASSPORT MIDDLEWARES COME FIRST ----
 app.use(session({
   secret: process.env.SESSION_SECRET || 'some_secret',
   resave: false,
   saveUninitialized: true,
   store: MongoStore.create({
-    mongoUrl: process.env.MONGODB_URI, // use your actual MongoDB URI
+    mongoUrl: process.env.MONGODB_URI,
     collectionName: 'sessions'
   })
 }));
-
 app.use(passport.initialize());
 app.use(passport.session());
 
+// ---- THEN YOUR ROUTES ----
+app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/cars', carRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/payments', paymentRoutes);
-app.use('/api/auth', authRoutes);
 
 const MONGO_URI = process.env.MONGODB_URI;
 if (require.main === module) {
