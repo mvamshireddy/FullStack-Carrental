@@ -55,7 +55,7 @@ const LoginPage = () => {
 
   // Google Login Handler
   const handleGoogleLogin = () => {
-    window.location.href = `${API_URL}/auth/google`;
+    window.location.href = `${API_URL}/auth/google`||'https://fullstack-carrental.onrender.com/api/auth/google';
   };
 
   return (
