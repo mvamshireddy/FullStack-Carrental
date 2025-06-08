@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import { AuthContext } from '../context/AuthContext';
 import './LoginPage.css';
 
-// Use your Render backend URL for API calls and Google login
-const API_URL = process.env.REACT_APP_API_URL || 'https://fullstack-carrental.onrender.com';
+const API_URL = process.env.REACT_APP_API_URL || 'https://fullstack-carrental.onrender.com/api';
 
 const GoogleLogo = () => (
   <svg className="google-icon" width="22" height="22" viewBox="0 0 22 22">
@@ -24,6 +24,8 @@ const LoginPage = () => {
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const { setUser, setToken } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
   const redirectPath = new URLSearchParams(location.search).get('redirect') || '/';
@@ -33,12 +35,11 @@ const LoginPage = () => {
     setErrorMsg('');
     setSuccessMsg('');
     setLoading(true);
-
     try {
-      const response = await axios.post(`${API_URL}/users/login`, { email, password });
+      const response = await axios.post(`${API_URL}/auth/login`, { email, password });
       const { token, user } = response.data;
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
+      setToken(token);
+      setUser(user);
       setSuccessMsg('Login successful! Redirecting...');
       setTimeout(() => navigate(redirectPath), 1000);
     } catch (error) {
@@ -53,16 +54,9 @@ const LoginPage = () => {
   };
 
   // Google Login Handler
-  //const handleGoogleLogin = () => {
-    // Always use the full backend URL for Google login
-    //window.location.href = `${API_URL}/auth/google`;
-  //};
-
-  const API_URL = process.env.REACT_APP_API_URL || 'https://fullstack-carrental.onrender.com';
-
-const handleGoogleLogin = () => {
-  window.location.href = `${API_URL}/api/auth/google`;
-};
+  const handleGoogleLogin = () => {
+    window.location.href = `${API_URL}/auth/google`;
+  };
 
   return (
     <div className="login-page">

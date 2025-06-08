@@ -13,27 +13,33 @@ import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import MyBookings from './pages/MyBookings';
-
+import GoogleAuthSuccess from './pages/GoogleAuthSuccess'; // Make sure you have this page!
+import { AuthProvider } from './context/AuthContext';
+import ProfileMenu from './components/ProfileMenu';
 
 function App() {
   return (
-    <Router>
-      <Navbar />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/vehicles" element={<Vehicles />} />
-        <Route path="/services" element={<Services />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/booknow" element={<BookNow />} />
-        <Route path="/confirmation/:bookingRef" element={<BookingConfirmation />} />
-        <Route path="/bookings" element={<MyBookings />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      </Routes>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <Navbar />
+        <ProfileMenu />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/vehicles" element={<Vehicles />} />
+          <Route path="/services" element={<Services />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/booknow" element={<BookNow />} />
+          <Route path="/confirmation/:bookingRef" element={<BookingConfirmation />} />
+          <Route path="/bookings" element={<MyBookings />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/google-auth-success" element={<GoogleAuthSuccess />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
 export default App;

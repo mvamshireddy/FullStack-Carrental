@@ -1,33 +1,38 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { AuthContext } from "../context/AuthContext";
 import "./ProfilePage.css";
 
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+const API_URL = process.env.REACT_APP_API_URL || "https://fullstack-carrental.onrender.com/api";
 
 const ProfilePage = () => {
-  const [user, setUser] = useState(null);
+  const { user, setUser, setToken } = useContext(AuthContext);
   const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) return navigate("/login");
     axios
-      .get(`${API_URL}/users/profile`, {
+      .get(`${API_URL}/users/me`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => {
         setUser(res.data);
-        localStorage.setItem("user", JSON.stringify(res.data));
       })
       .catch(() => {
+        setToken(null);
+        setUser(null);
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         navigate("/login");
       });
-  }, [navigate]);
+    // eslint-disable-next-line
+  }, []);
 
   const handleLogout = () => {
+    setToken(null);
+    setUser(null);
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     navigate("/login");
