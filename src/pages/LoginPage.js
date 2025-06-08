@@ -58,7 +58,7 @@ const LoginPage = () => {
     //window.location.href = `${API_URL}/auth/google`;
   //};
 
-  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+  const API_URL = process.env.REACT_APP_API_URL || 'https://fullstack-carrental.onrender.com';
 
 const handleGoogleLogin = () => {
   window.location.href = `${API_URL}/api/auth/google`;
