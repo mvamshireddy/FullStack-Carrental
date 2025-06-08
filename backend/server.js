@@ -9,14 +9,15 @@ require('./config/passport');
 const userRoutes = require('./routes/user');
 const carRoutes = require('./routes/car');
 const bookingRoutes = require('./routes/booking');
-const authRoutes = require('./routes/auth');
 const paymentRoutes = require('./routes/payment');
+const authRoutes = require('./routes/auth');
 
-app.use('/api/auth', authRoutes);
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+app.use('/api/auth', authRoutes);
 
 app.use(session({
   secret: process.env.SESSION_SECRET || 'some_secret',
