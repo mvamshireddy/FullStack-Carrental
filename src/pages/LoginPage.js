@@ -4,7 +4,7 @@ import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 import './LoginPage.css';
 
-const API_URL = process.env.REACT_APP_API_URL || 'https://fullstack-carrental.onrender.com/api';
+const API_URL = process.env.REACT_APP_API_URL || 'https://fullstack-carrental.onrender.com';
 
 const GoogleLogo = () => (
   <svg className="google-icon" width="22" height="22" viewBox="0 0 22 22">
