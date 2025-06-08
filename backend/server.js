@@ -6,6 +6,7 @@ const session = require('express-session');
 const passport = require('passport');
 require('./config/passport');
 
+// Import routes
 const userRoutes = require('./routes/user');
 const carRoutes = require('./routes/car');
 const bookingRoutes = require('./routes/booking');
