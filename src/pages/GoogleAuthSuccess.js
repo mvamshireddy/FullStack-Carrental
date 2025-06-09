@@ -20,7 +20,7 @@ export default function GoogleAuthSuccess() {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then(res => {
-          setUser(res.data.user);
+          setUser(res.data);
           navigate('/');
         })
         .catch(() => {

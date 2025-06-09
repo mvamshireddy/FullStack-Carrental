@@ -49,14 +49,37 @@ exports.sendLoginMail = async (to, name, loginTime = new Date()) => {
   return transporter.sendMail(mailOptions);
 };
 
+exports.sendBookingConfirmationMail = async (to, booking) => {
+  const transporter = await createTransporter();
+  const mailOptions = {
+    from: process.env.GOOGLE_MAIL_USER,
+    to,
+    subject: 'Your Booking is Confirmed - ShadowCars',
+    html: `
+      <h2>Your Booking is Confirmed!</h2>
+      <p>Thank you for booking with ShadowCars.</p>
+      <h3>Booking Details:</h3>
+      <ul>
+        <li><b>Reference ID:</b> ${booking.referenceId}</li>
+        <li><b>Car:</b> ${booking.car?.name || booking.staticCar?.name || 'N/A'}</li>
+        <li><b>Pickup Location:</b> ${booking.pickupLocation}</li>
+        <li><b>Dropoff Location:</b> ${booking.dropoffLocation}</li>
+        <li><b>Start Time:</b> ${new Date(booking.startTime).toLocaleString()}</li>
+        <li><b>End Time:</b> ${new Date(booking.endTime).toLocaleString()}</li>
+      </ul>
+      <p>We look forward to serving you!</p>
+    `
+  };
+  return transporter.sendMail(mailOptions);
+};
+
 exports.sendCustomMail = async (to, subject, html) => {
   const transporter = await createTransporter();
   const mailOptions = { from: process.env.GOOGLE_MAIL_USER, to, subject, html };
   return transporter.sendMail(mailOptions);
 };
 
-
-//test
+// For quick email testing
 if (require.main === module) {
   exports.sendWelcomeMail('YOUR_EMAIL@gmail.com', 'Test User')
     .then(() => console.log('[MAIL DEBUG] Direct test: Welcome mail sent!'))
