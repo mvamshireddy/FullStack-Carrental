@@ -5,7 +5,7 @@ import Footer from "../components/Footer";
 import "./BookingConfirmation.css";
 import axios from "axios";
 
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+const API_URL = process.env.REACT_APP_API_URL || "https://fullstack-carrental.onrender.com";
 
 const BookingConfirmation = () => {
   const { bookingRef } = useParams(); // bookingRef from URL
@@ -20,7 +20,7 @@ const BookingConfirmation = () => {
         setLoading(true);
         setError(null);
         // Fetch from your API endpoint by referenceId
-        const res = await axios.get(`${API_URL}/bookings/${bookingRef}`);
+        const res = await axios.get(`${API_URL}/api/bookings/${bookingRef}`);
         setBooking(res.data);
       } catch (err) {
         setError("Could not load booking details. Please check your reference or try again.");
