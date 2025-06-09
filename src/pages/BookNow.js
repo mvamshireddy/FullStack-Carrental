@@ -236,7 +236,7 @@ const BookNow = () => {
       setLoading(true);
 
       try {
-        const { data } = await api.post("/payments/create-intent", { amount, currency: "usd" });
+        const { data } = await api.post("/api/payments/create-intent", { amount, currency: "usd" });
         const clientSecret = data.clientSecret;
 
         const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {

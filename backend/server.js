@@ -12,15 +12,13 @@ const app = express();
 const userRoutes = require('./routes/user');
 const carRoutes = require('./routes/car');
 const bookingRoutes = require('./routes/booking');
-const paymentRoutes = require('./routes/payment');
+const paymentRoutes = require('./routes/payment'); // <-- Make sure file is named payment.js
 const authRoutes = require('./routes/auth');
-
-app.use('/api/auth', authRoutes);
 
 app.use(cors());
 app.use(express.json());
 
-// ---- SESSION AND PASSPORT MIDDLEWARES COME FIRST ----
+// ---- SESSION AND PASSPORT MIDDLEWARES ----
 app.use(session({
   secret: process.env.SESSION_SECRET || 'some_secret',
   resave: false,
@@ -33,12 +31,12 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-// ---- THEN YOUR ROUTES ----
+// ---- ROUTES ----
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/cars', carRoutes);
 app.use('/api/bookings', bookingRoutes);
-app.use('/api/payments', paymentRoutes);
+app.use('/api/payments', paymentRoutes); // <-- endpoint is /api/payments/...
 
 const MONGO_URI = process.env.MONGODB_URI;
 if (require.main === module) {
