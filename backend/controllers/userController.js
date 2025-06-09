@@ -56,3 +56,14 @@ exports.login = async (req, res) => {
     res.status(500).json({ message: 'Login failed', error: err.message });
   }
 };
+// Get current user info (for /api/users/me)
+exports.getMe = async (req, res) => {
+  try {
+    // req.user is set by your auth middleware after verifying JWT
+    const user = await User.findById(req.user.userId).select('-password');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
