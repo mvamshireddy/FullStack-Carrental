@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
 
-const API_URL = process.env.REACT_APP_API_URL || 'https://fullstack-carrental.onrender.com';
+const API_URL = process.env.REACT_APP_API_URL || 'https://fullstack-carrental.onrender.com/api';
 
 export default function GoogleAuthSuccess() {
   const navigate = useNavigate();
