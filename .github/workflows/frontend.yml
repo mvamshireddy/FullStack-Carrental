@@ -17,18 +17,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Set up Node
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
 
-      - name: Install dependencies
-        run: npm ci
+      - name: List project files (debug step)
+        run: ls -la
 
-      - name: Lint
-        run: npm run lint || echo "Lint failed"
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run linter (optional)
+        run: npm run lint || echo "Lint failed, continuing..."
 
       - name: Build React app
         run: npm run build
