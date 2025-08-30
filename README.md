@@ -3,6 +3,12 @@
 A full-featured Car Rental web application built with a modern full-stack technology stack. This project enables users to browse, book, and manage car rentals online, while providing administrators with tools to manage the fleet, reservations, and users.
 
 ---
+## Live Demo
+
+Check out the deployed application here:  
+[https://full-stack-carrental.vercel.app](https://full-stack-carrental.vercel.app)
+
+-----
 
 ## Table of Contents
 
